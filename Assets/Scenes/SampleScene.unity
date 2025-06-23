@@ -358,7 +358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zoomSpeed: 100
   minZoom: 5
-  maxZoom: 100
+  maxZoom: 300
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -455,6 +455,7 @@ GameObject:
   - component: {fileID: 1348387817}
   - component: {fileID: 1348387818}
   - component: {fileID: 1348387819}
+  - component: {fileID: 1348387820}
   m_Layer: 0
   m_Name: Environment
   m_TagString: Untagged
@@ -489,8 +490,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 100
-  height: 100
+  width: 500
+  height: 500
   drawBoundary: 1
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -504,24 +505,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  noiseSettings:
-    scale: 40
-    threshold: 0.1
-    offset: {x: 0, y: 0}
-    animate: 0
-    animationSpeed: 0.1
-    contrast: 1
-    gridWidth: 20
-    gridHeight: 20
-    lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
-    highDensityColor: {r: 1, g: 0, b: 0, a: 1}
   textureResolution: 256
-  randomizeOnStart: 1
+  showDebugValues: 0
+  debugTextColor: {r: 1, g: 1, b: 1, a: 1}
+  debugFontSize: 8
 --- !u!114 &1348387819
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -534,21 +526,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  noiseSettings:
-    scale: 40
-    threshold: 0.5
-    offset: {x: 0, y: 0}
-    animate: 0
-    animationSpeed: 0.1
-    contrast: 1
-    gridWidth: 20
-    gridHeight: 20
-    lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
-    highDensityColor: {r: 1, g: 0, b: 0, a: 0.5}
-  maxFoodPerCell: 3
+  maxFoodPerCell: 15
   foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
   energyValue: 10
   respawnDelay: 5
+--- !u!114 &1348387820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348387814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6878bcc45ad9ee7478097969a6b0b0cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  noiseSettings:
+    scale: 100
+    threshold: 0.1
+    offset: {x: 0, y: 0}
+    animate: 0
+    animationSpeed: 0.1
+    contrast: 2
+    gridWidth: 50
+    gridHeight: 50
+    lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
+    highDensityColor: {r: 1, g: 0, b: 0, a: 0.5}
+  randomizeOnStart: 1
+  OnNoiseUpdated:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
