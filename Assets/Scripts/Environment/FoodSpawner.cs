@@ -7,9 +7,6 @@ namespace EvolutionSimulator.Environment
     {
         [Header("Spawn Settings")]
         [SerializeField]
-        private NoiseSettings noiseSettings = new NoiseSettings();
-
-        [SerializeField]
         private int maxFoodPerCell = 3;
 
         [Header("Food Settings")]
@@ -22,18 +19,20 @@ namespace EvolutionSimulator.Environment
         [SerializeField]
         private float respawnDelay = 5f;
 
-        private Boundaries boundaries;
+        private NoiseManager noiseManager;
+        private NoiseSettings noiseSettings;
         private List<FoodItem> activeFoods = new List<FoodItem>();
         private float timeOffset = 0f;
 
         void Start()
         {
-            boundaries = GetComponent<Boundaries>();
-            if (boundaries == null)
+            noiseManager = GetComponent<NoiseManager>();
+            if (noiseManager == null)
             {
-                Debug.LogError("FoodSpawner requires Boundaries component!");
+                Debug.LogError("FoodSpawner requires NoiseManager component!");
                 return;
             }
+            noiseSettings = noiseManager.Settings;
 
             InitialSpawn();
         }
@@ -48,7 +47,9 @@ namespace EvolutionSimulator.Environment
 
         void InitialSpawn()
         {
-            Bounds worldBounds = boundaries.WorldBounds;
+            if (noiseManager == null)
+                return;
+            Bounds worldBounds = noiseManager.WorldBounds;
             Vector2 cellSize = new Vector2(
                 worldBounds.size.x / noiseSettings.gridWidth,
                 worldBounds.size.y / noiseSettings.gridHeight

@@ -1,41 +1,75 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace EvolutionSimulator.Environment
 {
     public class PerlinNoiseVisualizer : MonoBehaviour
     {
-        [Header("Noise Settings")]
-        [SerializeField]
-        private NoiseSettings noiseSettings = new NoiseSettings();
-
         [Header("Visualization")]
         [SerializeField]
         private int textureResolution = 256;
 
-        [Header("Randomization")]
+        [Header("Debug")]
         [SerializeField]
-        private bool randomizeOnStart = true;
+        private bool showDebugValues = false;
+
+        [SerializeField]
+        private Color debugTextColor = Color.white;
+
+        [SerializeField]
+        private int debugFontSize = 12;
 
         private Texture2D noiseTexture;
         private SpriteRenderer spriteRenderer;
-        private Boundaries boundaries;
-        private float timeOffset = 0f;
+        private NoiseManager noiseManager;
+        private NoiseSettings noiseSettings;
+
+        // UI Debug elements
+        private Canvas debugCanvas;
+        private List<Text> debugTexts = new List<Text>();
+        private List<Vector2> gridWorldPositions = new List<Vector2>();
 
         void Start()
         {
-            boundaries = GetComponent<Boundaries>();
-            if (boundaries == null)
+            noiseManager = GetComponent<NoiseManager>();
+            if (noiseManager == null)
             {
-                Debug.LogError("PerlinNoiseVisualizer requires Boundaries component!");
+                Debug.LogError("PerlinNoiseVisualizer requires NoiseManager component!");
                 return;
             }
+            noiseSettings = noiseManager.Settings;
 
             SetupRenderer();
+            SetupDebugCanvas();
+            GenerateGridTexture();
+            if (showDebugValues)
+            {
+                UpdateDebugTexts();
+            }
 
-            if (randomizeOnStart)
-                RandomizeNoise();
-            else
-                GenerateGridTexture();
+            // Subscribe to noise updates for synchronization
+            noiseManager.OnNoiseUpdated.AddListener(GenerateGridTexture);
+            noiseManager.OnNoiseUpdated.AddListener(UpdateDebugTexts);
+        }
+
+        void Update()
+        {
+            // Update debug text positions when camera moves
+            if (showDebugValues && debugCanvas != null)
+            {
+                UpdateDebugTextPositions();
+            }
+        }
+
+        void OnDestroy()
+        {
+            // Prevent memory leaks
+            if (noiseManager != null)
+            {
+                noiseManager.OnNoiseUpdated.RemoveListener(GenerateGridTexture);
+                noiseManager.OnNoiseUpdated.RemoveListener(UpdateDebugTexts);
+            }
         }
 
         void SetupRenderer()
@@ -48,36 +82,143 @@ namespace EvolutionSimulator.Environment
             spriteRenderer.sortingOrder = -10;
         }
 
-        void Update()
+        void SetupDebugCanvas()
         {
-            if (noiseSettings.animate)
+            // Create Canvas
+            GameObject canvasObj = new GameObject("DebugCanvas");
+            canvasObj.transform.parent = transform;
+
+            debugCanvas = canvasObj.AddComponent<Canvas>();
+            debugCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            debugCanvas.sortingOrder = 1000;
+
+            CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+
+            canvasObj.AddComponent<GraphicRaycaster>();
+
+            // Create debug text elements
+            CreateDebugTexts();
+        }
+
+        void CreateDebugTexts()
+        {
+            Bounds worldBounds = noiseManager.WorldBounds;
+
+            Vector2 cellSize = new Vector2(
+                worldBounds.size.x / noiseSettings.gridWidth,
+                worldBounds.size.y / noiseSettings.gridHeight
+            );
+
+            gridWorldPositions.Clear();
+            debugTexts.Clear();
+
+            for (int x = 0; x < noiseSettings.gridWidth; x++)
             {
-                timeOffset += noiseSettings.animationSpeed * Time.deltaTime;
-                GenerateGridTexture();
+                for (int y = 0; y < noiseSettings.gridHeight; y++)
+                {
+                    // Calculate world position at grid cell center
+                    Vector2 cellCenter = new Vector2(
+                        worldBounds.min.x + (x + 0.5f) * cellSize.x,
+                        worldBounds.min.y + (y + 0.5f) * cellSize.y
+                    );
+                    gridWorldPositions.Add(cellCenter);
+
+                    // Create UI Text
+                    GameObject textObj = new GameObject($"DebugText_{x}_{y}");
+                    textObj.transform.SetParent(debugCanvas.transform, false);
+
+                    Text uiText = textObj.AddComponent<Text>();
+                    uiText.text = "0.00";
+                    uiText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    uiText.fontSize = debugFontSize;
+                    uiText.color = debugTextColor;
+                    uiText.alignment = TextAnchor.MiddleCenter;
+
+                    // Set RectTransform
+                    RectTransform rectTransform = textObj.GetComponent<RectTransform>();
+                    rectTransform.sizeDelta = new Vector2(50, 20);
+
+                    debugTexts.Add(uiText);
+                    textObj.SetActive(showDebugValues);
+                }
             }
+        }
+
+        void UpdateDebugTextPositions()
+        {
+            if (Camera.main == null)
+                return;
+
+            for (int i = 0; i < gridWorldPositions.Count && i < debugTexts.Count; i++)
+            {
+                Vector3 worldPos = new Vector3(gridWorldPositions[i].x, gridWorldPositions[i].y, 0);
+                Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
+
+                // Check if position is on screen
+                if (screenPos.z > 0)
+                {
+                    debugTexts[i].transform.position = screenPos;
+                    debugTexts[i].gameObject.SetActive(showDebugValues);
+                }
+                else
+                {
+                    debugTexts[i].gameObject.SetActive(false);
+                }
+            }
+        }
+
+        void UpdateDebugTexts()
+        {
+            if (!showDebugValues)
+                return;
+
+            for (int i = 0; i < gridWorldPositions.Count && i < debugTexts.Count; i++)
+            {
+                Vector2 cellCenter = gridWorldPositions[i];
+
+                float rawValue = PerlinNoise.SampleRaw(
+                    cellCenter.x,
+                    cellCenter.y,
+                    noiseSettings.scale,
+                    noiseSettings.offset,
+                    noiseSettings.contrast
+                );
+
+                Debug.Log($"Debug Text {i}: {rawValue}");
+
+                debugTexts[i].text = rawValue.ToString("F2");
+            }
+
+            UpdateDebugTextPositions();
         }
 
         void GenerateGridTexture()
         {
+            if (noiseManager == null)
+                return;
+
             if (noiseTexture == null)
             {
                 noiseTexture = new Texture2D(textureResolution, textureResolution);
-                noiseTexture.filterMode = FilterMode.Point; // Sharp grid edges
+                noiseTexture.filterMode = FilterMode.Point;
             }
 
-            // Sample grid data
+            Bounds worldBounds = noiseManager.WorldBounds;
+
+            // Sample grid data using NoiseManager's settings and time
             GridData gridData = PerlinNoise.SampleGrid(
-                boundaries.WorldBounds,
+                worldBounds,
                 noiseSettings.gridWidth,
                 noiseSettings.gridHeight,
                 noiseSettings.scale,
                 noiseSettings.offset,
                 noiseSettings.threshold,
-                timeOffset,
+                noiseSettings.animate ? noiseManager.CurrentTimeOffset : 0f,
                 noiseSettings.contrast
             );
 
-            // Fill texture based on grid with proper stretching
+            // Fill texture based on grid
             for (int gridX = 0; gridX < noiseSettings.gridWidth; gridX++)
             {
                 for (int gridY = 0; gridY < noiseSettings.gridHeight; gridY++)
@@ -89,7 +230,7 @@ namespace EvolutionSimulator.Environment
                         noiseValue
                     );
 
-                    // Calculate exact pixel boundaries for this grid cell
+                    // Calculate pixel boundaries for this grid cell
                     int startX = Mathf.RoundToInt(
                         (float)gridX * textureResolution / noiseSettings.gridWidth
                     );
@@ -103,7 +244,7 @@ namespace EvolutionSimulator.Environment
                         (float)(gridY + 1) * textureResolution / noiseSettings.gridHeight
                     );
 
-                    // Fill texture region for this grid cell
+                    // Fill texture region
                     for (int x = startX; x < endX; x++)
                     {
                         for (int y = startY; y < endY; y++)
@@ -120,7 +261,7 @@ namespace EvolutionSimulator.Environment
 
         void UpdateSprite()
         {
-            Vector2 worldSize = boundaries.WorldSize;
+            Vector2 worldSize = noiseManager.WorldBounds.size;
             Sprite sprite = Sprite.Create(
                 noiseTexture,
                 new Rect(0, 0, textureResolution, textureResolution),
@@ -131,38 +272,42 @@ namespace EvolutionSimulator.Environment
             spriteRenderer.sprite = sprite;
         }
 
-        [ContextMenu("Randomize Noise")]
-        public void RandomizeNoise()
-        {
-            noiseSettings.offset = new Vector2(
-                Random.Range(-1000f, 1000f),
-                Random.Range(-1000f, 1000f)
-            );
-            if (Application.isPlaying)
-                GenerateGridTexture();
-        }
-
         public float GetNoiseValueAtPosition(Vector3 position)
         {
-            return PerlinNoise.SampleThresholded(
+            if (noiseManager == null)
+                return 0f;
+
+            return PerlinNoise.SampleRaw(
                 position.x,
                 position.y,
                 noiseSettings.scale,
                 noiseSettings.offset,
-                noiseSettings.threshold,
-                timeOffset,
                 noiseSettings.contrast
             );
         }
 
         void OnValidate()
         {
-            noiseSettings.gridWidth = Mathf.Clamp(noiseSettings.gridWidth, 10, 200);
-            noiseSettings.gridHeight = Mathf.Clamp(noiseSettings.gridHeight, 10, 200);
             textureResolution = Mathf.Clamp(textureResolution, 64, 512);
+            debugFontSize = Mathf.Clamp(debugFontSize, 8, 24);
 
-            if (Application.isPlaying && boundaries != null)
-                GenerateGridTexture();
+            if (Application.isPlaying && debugCanvas != null)
+            {
+                debugCanvas.gameObject.SetActive(showDebugValues);
+
+                foreach (Text text in debugTexts)
+                {
+                    text.color = debugTextColor;
+                    text.fontSize = debugFontSize;
+                    text.gameObject.SetActive(showDebugValues);
+                }
+
+                if (noiseManager != null)
+                {
+                    GenerateGridTexture();
+                    UpdateDebugTexts();
+                }
+            }
         }
     }
 }

@@ -200,7 +200,7 @@ Transform:
   m_GameObject: {fileID: 129217375}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.2422328, y: 4.397358, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -288,7 +288,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -358,7 +358,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   zoomSpeed: 100
   minZoom: 5
-  maxZoom: 50
+  maxZoom: 100
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,6 +453,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1348387816}
   - component: {fileID: 1348387817}
+  - component: {fileID: 1348387818}
+  - component: {fileID: 1348387819}
   m_Layer: 0
   m_Name: Environment
   m_TagString: Untagged
@@ -469,7 +471,7 @@ Transform:
   m_GameObject: {fileID: 1348387814}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.20009, y: 10.11411, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -495,6 +497,58 @@ MonoBehaviour:
   OnBoundsChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1348387818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348387814}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  noiseSettings:
+    scale: 40
+    threshold: 0.1
+    offset: {x: 0, y: 0}
+    animate: 0
+    animationSpeed: 0.1
+    contrast: 1
+    gridWidth: 20
+    gridHeight: 20
+    lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
+    highDensityColor: {r: 1, g: 0, b: 0, a: 1}
+  textureResolution: 256
+  randomizeOnStart: 1
+--- !u!114 &1348387819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348387814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  noiseSettings:
+    scale: 40
+    threshold: 0.5
+    offset: {x: 0, y: 0}
+    animate: 0
+    animationSpeed: 0.1
+    contrast: 1
+    gridWidth: 20
+    gridHeight: 20
+    lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
+    highDensityColor: {r: 1, g: 0, b: 0, a: 0.5}
+  maxFoodPerCell: 3
+  foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
+  energyValue: 10
+  respawnDelay: 5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -126,12 +126,11 @@ namespace EvolutionSimulator.Environment
                         bounds.min.y + (y + 0.5f) * cellSize.y
                     );
 
-                    float noiseValue = SampleThresholded(
+                    float noiseValue = SampleRawAnimated(
                         worldPos.x,
                         worldPos.y,
                         scale,
                         offset,
-                        threshold,
                         timeOffset,
                         contrast
                     );
