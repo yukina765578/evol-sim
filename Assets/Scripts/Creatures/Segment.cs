@@ -25,40 +25,71 @@ namespace EvolutionSimulator.Creatures
 
         void SetupLineRenderer()
         {
-            lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // Get or add LineRenderer
+            lineRenderer = GetComponent<LineRenderer>();
+            if (lineRenderer == null)
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+
+            // Configure LineRenderer
             lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
             lineRenderer.positionCount = 2;
             lineRenderer.useWorldSpace = true;
-            lineRenderer.sortingOrder = 1;
+            lineRenderer.sortingOrder = 0; // Below nodes
         }
 
         void UpdateVisuals()
         {
-            if (lineRenderer == null)
+            if (lineRenderer != null)
             {
-                SetupLineRenderer();
+                // Use gradient for LineRenderer color in newer Unity versions
+                Gradient gradient = new Gradient();
+                gradient.SetKeys(
+                    new GradientColorKey[]
+                    {
+                        new GradientColorKey(segmentColor, 0.0f),
+                        new GradientColorKey(segmentColor, 1.0f),
+                    },
+                    new GradientAlphaKey[]
+                    {
+                        new GradientAlphaKey(segmentColor.a, 0.0f),
+                        new GradientAlphaKey(segmentColor.a, 1.0f),
+                    }
+                );
+                lineRenderer.colorGradient = gradient;
+                lineRenderer.startWidth = width;
+                lineRenderer.endWidth = width;
             }
-            lineRenderer.startWidth = width;
-            lineRenderer.endWidth = width;
-            lineRenderer.startColor = segmentColor;
-            lineRenderer.endColor = segmentColor;
         }
 
-        public void UpdateRotation(Vector3 nodePosition, float angle)
+        public void UpdateRotation(Vector3 anchorPosition, float angleInDegrees)
         {
             if (lineRenderer == null)
                 return;
 
-            float angleInRadians = angle * Mathf.Deg2Rad;
+            // Convert angle to radians
+            float angleInRadians = angleInDegrees * Mathf.Deg2Rad;
+
+            // Calculate endpoint position using trigonometry
             Vector3 endPosition =
-                nodePosition
+                anchorPosition
                 + new Vector3(
                     length * Mathf.Cos(angleInRadians),
                     length * Mathf.Sin(angleInRadians),
                     0f
                 );
 
-            lineRenderer.SetPosition(0, nodePosition);
+            // Update line positions
+            lineRenderer.SetPosition(0, anchorPosition); // Start at node center
+            lineRenderer.SetPosition(1, endPosition); // End at calculated position
+        }
+
+        public void UpdateRotation(Vector3 startPosition, Vector3 endPosition)
+        {
+            if (lineRenderer == null)
+                return;
+
+            // Update line positions to connect two nodes
+            lineRenderer.SetPosition(0, startPosition);
             lineRenderer.SetPosition(1, endPosition);
         }
 

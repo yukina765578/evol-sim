@@ -49,8 +49,38 @@ namespace EvolutionSimulator.Creatures
 
         Sprite CreateCircleSprite()
         {
-            // Use Unity's built-in circle sprite from UI resources
-            return Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+            // Create a simple circle texture programmatically
+            int resolution = 64;
+            Texture2D texture = new Texture2D(resolution, resolution);
+
+            Vector2 center = new Vector2(resolution / 2f, resolution / 2f);
+            float radius = resolution / 2f - 1f;
+
+            for (int x = 0; x < resolution; x++)
+            {
+                for (int y = 0; y < resolution; y++)
+                {
+                    Vector2 pos = new Vector2(x, y);
+                    float distance = Vector2.Distance(pos, center);
+
+                    if (distance <= radius)
+                    {
+                        texture.SetPixel(x, y, Color.white);
+                    }
+                    else
+                    {
+                        texture.SetPixel(x, y, Color.clear);
+                    }
+                }
+            }
+
+            texture.Apply();
+
+            return Sprite.Create(
+                texture,
+                new Rect(0, 0, resolution, resolution),
+                new Vector2(0.5f, 0.5f)
+            );
         }
 
         public Vector3 GetPosition()
