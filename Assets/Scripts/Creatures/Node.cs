@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace EvolutionSimulator.Creatures
+namespace EvolutionSimulator.Creature
 {
     public class Node : MonoBehaviour
     {

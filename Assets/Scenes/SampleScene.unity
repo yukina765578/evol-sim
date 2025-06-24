@@ -235,7 +235,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ffb52da3fd1068247ba21c97763ceda9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rotationSpeed: 90
+  nodePrefab: {fileID: 882074561848030900, guid: eb55a8a31a9481c499ada4d708e7b2a1, type: 3}
+  segmentPrefab: {fileID: 2826030228458786114, guid: 541615c0a0f76f24a83c88c1c7e7bbee, type: 3}
+  oscillationSpeed: 2
+  maxAngle: 30
+  oscillationSpeed2: 2
+  maxAngle2: 45
+  phaseOffset: 0.5
+  thrustEfficiency: 5
+  dragCoefficient: 2
   segmentLength: 2
   nodeSize: 1
   nodeColor: {r: 0, g: 0, b: 1, a: 1}
@@ -555,7 +563,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 

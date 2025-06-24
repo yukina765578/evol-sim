@@ -30,10 +30,6 @@ namespace EvolutionSimulator.Environment
             {
                 Debug.LogError("NoiseManager requires Boundaries component!");
             }
-        }
-
-        void Start()
-        {
             if (randomizeOnStart)
             {
                 RandomizeNoise();
