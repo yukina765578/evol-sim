@@ -206,64 +206,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &306219421
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 306219423}
-  - component: {fileID: 306219422}
-  m_Layer: 0
-  m_Name: TestCreature
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &306219422
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 306219421}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ffb52da3fd1068247ba21c97763ceda9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nodePrefab: {fileID: 882074561848030900, guid: eb55a8a31a9481c499ada4d708e7b2a1, type: 3}
-  segmentPrefab: {fileID: 2826030228458786114, guid: 541615c0a0f76f24a83c88c1c7e7bbee, type: 3}
-  oscillationSpeed: 2
-  maxAngle: 30
-  oscillationSpeed2: 2
-  maxAngle2: 45
-  phaseOffset: 0.5
-  thrustEfficiency: 5
-  dragCoefficient: 2
-  segmentLength: 2
-  nodeSize: 1
-  nodeColor: {r: 0, g: 0, b: 1, a: 1}
-  segmentColor: {r: 1, g: 1, b: 1, a: 1}
-  segmentWidth: 0.1
---- !u!4 &306219423
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 306219421}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -615,6 +557,63 @@ MonoBehaviour:
   OnNoiseUpdated:
     m_PersistentCalls:
       m_Calls: []
+--- !u!1 &1598720960
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1598720962}
+  - component: {fileID: 1598720963}
+  m_Layer: 0
+  m_Name: SimpleCreature
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1598720962
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598720960}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1598720963
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598720960}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a907b160cb8b2144b1cab6ad55927ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  oscillationSpeed: 2
+  maxAngle: 90
+  oscillationSpeed1: 2
+  maxAngle1: 30
+  phaseOffset: 0
+  segmentLength: 2
+  nodeSize: 1
+  nodeColor: {r: 0, g: 0, b: 1, a: 1}
+  segmentColor: {r: 1, g: 1, b: 1, a: 1}
+  segmentWidth: 0.1
+  thrustMultiplier: 5
+  waterResistance: 0.1
+  rotationalResistance: 0.05
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -623,4 +622,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 129217377}
   - {fileID: 1348387816}
-  - {fileID: 306219423}
+  - {fileID: 1598720962}

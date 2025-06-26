@@ -8,6 +8,8 @@ namespace EvolutionSimulator.Creature
         private float size = 1f;
         private Color nodeColor = Color.blue;
 
+        private Vector3 prevPosition;
+
         void Awake()
         {
             SetupRenderer();
@@ -17,8 +19,14 @@ namespace EvolutionSimulator.Creature
         {
             size = nodeSize;
             nodeColor = color;
+            prevPosition = transform.localPosition;
 
             UpdateVisuals();
+        }
+
+        void LateUpdate()
+        {
+            prevPosition = transform.localPosition;
         }
 
         void SetupRenderer()
@@ -81,6 +89,12 @@ namespace EvolutionSimulator.Creature
                 new Rect(0, 0, resolution, resolution),
                 new Vector2(0.5f, 0.5f)
             );
+        }
+
+        public Vector2 GetPositionDelta()
+        {
+            Vector2 delta = (Vector2)(transform.localPosition - prevPosition);
+            return delta;
         }
 
         public Vector3 GetPosition()
