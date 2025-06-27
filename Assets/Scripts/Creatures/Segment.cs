@@ -88,9 +88,20 @@ namespace EvolutionSimulator.Creature
             if (lineRenderer == null)
                 return;
             prevAngle = currentAngle;
-            float oscillation = Time.time * oscillationSpeed + phaseOffset;
-            currentAngle = Mathf.Sin(oscillation) * maxAngle;
-
+            float cycleTime = (Time.time / oscillationSpeed + phaseOffset) % oscillationSpeed;
+            float modifiedT;
+            if (cycleTime < oscillationSpeed * 0.25)
+            {
+                modifiedT = (cycleTime / (oscillationSpeed * 0.25f)) * Mathf.PI;
+            }
+            else
+            {
+                float remainingTime = cycleTime - (oscillationSpeed * 0.25f);
+                float slowDuration = oscillationSpeed * 0.75f;
+                modifiedT = Mathf.PI + (remainingTime / slowDuration) * Mathf.PI;
+            }
+            currentAngle = ((Mathf.Sin(modifiedT - Mathf.PI / 2) + 1f) / 2f) * maxAngle;
+            Debug.Log($"Segment modifiedT: {modifiedT}, currentAngle: {currentAngle}");
             Vector3 anchorPosition = parentNode.transform.position;
             Vector3 childPosition =
                 anchorPosition
@@ -112,7 +123,8 @@ namespace EvolutionSimulator.Creature
             Vector2 segmentThrust = (parentDelta + childDelta) / 2f;
             Vector2 thrustDirection = -segmentThrust.normalized;
 
-            float thrustMagnitude = segmentThrust.magnitude;
+            float thrustCoefficient = 5f;
+            float thrustMagnitude = segmentThrust.magnitude * thrustCoefficient;
             return thrustDirection * thrustMagnitude;
         }
 

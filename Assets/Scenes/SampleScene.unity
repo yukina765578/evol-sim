@@ -604,7 +604,7 @@ MonoBehaviour:
   oscillationSpeed: 2
   maxAngle: 90
   oscillationSpeed1: 2
-  maxAngle1: 30
+  maxAngle1: 90
   phaseOffset: 0
   segmentLength: 2
   nodeSize: 1

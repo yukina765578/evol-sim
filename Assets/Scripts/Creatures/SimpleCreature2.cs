@@ -59,11 +59,6 @@ namespace EvolutionSimulator.Creature
         private Segment segment0;
         private Segment segment1;
 
-        private float previousSegment0Angle = 0f;
-        private float previousSegment1Angle = 0f;
-        private float segment0Angle = 0f;
-        private float segment1Angle = 0f;
-
         private Rigidbody2D creatureRigidbody;
 
         void Start()
@@ -152,13 +147,7 @@ namespace EvolutionSimulator.Creature
             Vector2 segment0Thrust = segment0.GetThrust();
             Vector2 segment1Thrust = segment1.GetThrust();
             Vector2 totalThrust = segment0Thrust + segment1Thrust;
-            creatureRigidbody.AddForce(totalThrust * thrustMultiplier);
-
-            Debug.Log($"Thrust applie: {totalThrust * thrustMultiplier}");
-            Debug.Log($"Segment 0 Thrust: {segment0Thrust}, Segment 1 Thrust: {segment1Thrust}");
-            Debug.Log(
-                $"Segment 0 Angle: {segment0.GetCurrentAngle()}, Segment 1 Angle: {segment1.GetCurrentAngle()}"
-            );
+            creatureRigidbody.AddForce(totalThrust);
         }
 
         void ApplyWaterResistance()
