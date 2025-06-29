@@ -20,6 +20,15 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private float phaseOffset = 0.5f;
 
+        [SerializeField]
+        private float forwardRatio = 0.05f;
+
+        [SerializeField]
+        private float segment0BaseAngle = 0f;
+
+        [SerializeField]
+        private float segment1BaseAngle = 45f;
+
         [Header("Visual Settings")]
         [SerializeField]
         private float segmentLength = 2f;
@@ -36,155 +45,203 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private float segmentWidth = 0.1f;
 
-        [Header("Water Physics")]
+        [Header("Debug Settings")]
         [SerializeField]
-        private float thrustMultiplier = 5f;
-
-        [SerializeField]
-        private float waterResistance = 0.1f;
+        private bool showThrustDebug = false;
 
         [SerializeField]
-        private float rotationalResistance = 0.05f;
+        private bool showVelocityDebug = false;
 
-        private GameObject node0Object;
-        private GameObject node1Object;
-        private GameObject node2Object;
-        private GameObject segment0Object;
-        private GameObject segment1Object;
+        [Header("Physics")]
+        [SerializeField]
+        private float slidingFriction = 0.5f;
 
-        private Node node0;
-        private Node node1;
-        private Node node2;
-
-        private Segment segment0;
-        private Segment segment1;
-
+        private Node node0,
+            node1,
+            node2;
+        private Segment segment0,
+            segment1;
         private Rigidbody2D creatureRigidbody;
+        private LineRenderer velocityDebugLine;
 
         void Start()
         {
             SetupRigidbody();
-            SetupComponents();
+            CreateNodes();
+            CreateSegments();
+            SetupVelocityDebug();
+            UpdateDebugMode();
         }
 
         void Update()
         {
-            UpdateRotation(); // Visual updates
-            ApplyThrust(); // Apply thrust based on segment angles
+            UpdateRotation();
+            ApplyThrust();
+            ApplySlidingFriction();
+            UpdateVelocityDebug();
         }
 
         void SetupRigidbody()
         {
             creatureRigidbody = gameObject.AddComponent<Rigidbody2D>();
-            if (creatureRigidbody == null)
-            {
-                Debug.LogError("Rigidbody2D component could not be added to the creature.");
-            }
-
-            creatureRigidbody.gravityScale = 0f; // No gravity in water
+            creatureRigidbody.gravityScale = 0f;
         }
 
-        void SetupComponents()
+        void CreateNodes()
         {
-            // Create nodes
-            node0Object = new GameObject("Node0");
-            node0Object.transform.SetParent(transform);
-            node0Object.transform.localPosition = Vector3.zero;
-            node0 = node0Object.AddComponent<Node>();
-            node0.Initialize(nodeSize, nodeColor);
+            node0 = CreateNode("Node0", Vector3.zero);
+            node1 = CreateNode("Node1", Vector3.right * segmentLength);
+            node2 = CreateNode("Node2", Vector3.right * segmentLength * 2);
+        }
 
-            node1Object = new GameObject("Node1");
-            node1Object.transform.SetParent(transform);
-            node1Object.transform.localPosition = Vector3.right * segmentLength;
-            node1 = node1Object.AddComponent<Node>();
-            node1.Initialize(nodeSize, nodeColor);
+        Node CreateNode(string name, Vector3 position)
+        {
+            GameObject nodeObj = new GameObject(name);
+            nodeObj.transform.SetParent(transform);
+            nodeObj.transform.localPosition = position;
+            Node node = nodeObj.AddComponent<Node>();
+            node.Initialize(nodeSize, nodeColor);
+            return node;
+        }
 
-            node2Object = new GameObject("Node2");
-            node2Object.transform.SetParent(transform);
-            node2Object.transform.localPosition = Vector3.right * (segmentLength * 2);
-            node2 = node2Object.AddComponent<Node>();
-            node2.Initialize(nodeSize, nodeColor);
-
-            // Create segments
-            segment0Object = new GameObject("Segment0");
-            segment0Object.transform.SetParent(transform);
-            segment0 = segment0Object.AddComponent<Segment>();
-            segment0.Initialize(
-                segmentLength,
-                segmentWidth,
-                segmentColor,
+        void CreateSegments()
+        {
+            segment0 = CreateSegment(
+                "Segment0",
                 oscillationSpeed,
                 maxAngle,
+                segment0BaseAngle,
                 node0,
                 node1
             );
-
-            segment1Object = new GameObject("Segment1");
-            segment1Object.transform.SetParent(transform);
-            segment1 = segment1Object.AddComponent<Segment>();
-            segment1.Initialize(
-                segmentLength,
-                segmentWidth,
-                segmentColor,
+            segment1 = CreateSegment(
+                "Segment1",
                 oscillationSpeed1,
                 maxAngle1,
+                segment1BaseAngle,
                 node1,
                 node2
             );
         }
 
+        Segment CreateSegment(
+            string name,
+            float speed,
+            float angle,
+            float baseAngle,
+            Node parent,
+            Node child
+        )
+        {
+            GameObject segmentObj = new GameObject(name);
+            segmentObj.transform.SetParent(transform);
+            Segment segment = segmentObj.AddComponent<Segment>();
+            segment.Initialize(
+                segmentLength,
+                segmentWidth,
+                segmentColor,
+                speed,
+                angle,
+                forwardRatio,
+                baseAngle,
+                parent,
+                child
+            );
+            return segment;
+        }
+
+        void SetupVelocityDebug()
+        {
+            GameObject debugObj = new GameObject("VelocityDebug");
+            debugObj.transform.SetParent(transform);
+
+            velocityDebugLine = debugObj.AddComponent<LineRenderer>();
+            velocityDebugLine.material = new Material(Shader.Find("Sprites/Default"));
+            velocityDebugLine.positionCount = 2;
+            velocityDebugLine.useWorldSpace = true;
+            velocityDebugLine.sortingOrder = 10;
+            velocityDebugLine.startWidth = 0.1f;
+            velocityDebugLine.endWidth = 0.1f;
+
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[]
+                {
+                    new GradientColorKey(Color.red, 0.0f),
+                    new GradientColorKey(Color.red, 1.0f),
+                },
+                new GradientAlphaKey[]
+                {
+                    new GradientAlphaKey(1.0f, 0.0f),
+                    new GradientAlphaKey(1.0f, 1.0f),
+                }
+            );
+            velocityDebugLine.colorGradient = gradient;
+            velocityDebugLine.enabled = false;
+        }
+
+        void UpdateDebugMode()
+        {
+            segment0?.SetDebugMode(showThrustDebug);
+            segment1?.SetDebugMode(showThrustDebug);
+            if (velocityDebugLine != null)
+                velocityDebugLine.enabled = showVelocityDebug;
+        }
+
         void UpdateRotation()
         {
             segment0.UpdateRotation();
-            float segment0Angle = segment0.GetCurrentAngle();
-            segment1.UpdateRotation(segment0Angle, phaseOffset);
+            segment1.UpdateRotation(segment0.GetCurrentAngle(), phaseOffset);
         }
 
         void ApplyThrust()
         {
-            if (creatureRigidbody == null)
-                return;
-            Vector2 segment0Thrust = segment0.GetThrust();
-            Vector2 segment1Thrust = segment1.GetThrust();
-            Vector2 totalThrust = segment0Thrust + segment1Thrust;
+            Vector2 totalThrust = segment0.GetThrust() + segment1.GetThrust();
             creatureRigidbody.AddForce(totalThrust);
         }
 
-        void ApplyWaterResistance()
+        void ApplySlidingFriction()
         {
-            if (creatureRigidbody == null)
+            Vector2 velocity = creatureRigidbody.linearVelocity;
+            float speed = velocity.magnitude;
+
+            if (speed > 0.001f)
+            {
+                float frictionCoeff = slidingFriction / (speed + 0.1f);
+                Vector2 frictionForce = -velocity * frictionCoeff;
+                creatureRigidbody.AddForce(frictionForce);
+            }
+        }
+
+        void UpdateVelocityDebug()
+        {
+            if (!showVelocityDebug || velocityDebugLine == null)
                 return;
 
             Vector2 velocity = creatureRigidbody.linearVelocity;
+            Vector3 nodePos = node0.transform.position;
+            float offset = nodeSize + 0.2f;
 
-            // Water resistance proportional to velocity squared
-            float speed = velocity.magnitude;
-            if (speed > 0.01f)
-            {
-                Vector2 resistance = -velocity.normalized * speed * speed * waterResistance;
-                creatureRigidbody.AddForce(resistance);
-            }
+            Vector3 startPos = nodePos + (Vector3)velocity.normalized * offset;
+            Vector3 endPos = startPos + (Vector3)velocity.normalized * velocity.magnitude * 3f;
 
-            // Angular resistance for rotation
-            float angularVel = creatureRigidbody.angularVelocity;
-            if (Mathf.Abs(angularVel) > 0.01f)
-            {
-                float angularResistance =
-                    -angularVel * Mathf.Abs(angularVel) * rotationalResistance;
-                creatureRigidbody.AddTorque(angularResistance);
-            }
+            velocityDebugLine.SetPosition(0, startPos);
+            velocityDebugLine.SetPosition(1, endPos);
         }
 
         void OnValidate()
         {
             oscillationSpeed = Mathf.Clamp(oscillationSpeed, 0.1f, 10f);
-            maxAngle = Mathf.Clamp(maxAngle, 0f, 180f);
+            maxAngle = Mathf.Clamp(maxAngle, -180f, 180f);
             oscillationSpeed1 = Mathf.Clamp(oscillationSpeed1, 0.1f, 10f);
-            maxAngle1 = Mathf.Clamp(maxAngle1, 0f, 180f);
+            maxAngle1 = Mathf.Clamp(maxAngle1, -180f, 180f);
             nodeSize = Mathf.Clamp(nodeSize, 0.1f, 5f);
             segmentWidth = Mathf.Clamp(segmentWidth, 0.01f, 1f);
-            thrustMultiplier = Mathf.Clamp(thrustMultiplier, 0f, 20f);
-            waterResistance = Mathf.Clamp(waterResistance, 0f, 1f);
+            slidingFriction = Mathf.Clamp(slidingFriction, 0f, 2f);
+            forwardRatio = Mathf.Clamp(forwardRatio, 0.01f, 0.99f);
+
+            if (Application.isPlaying)
+                UpdateDebugMode();
         }
     }
 }
