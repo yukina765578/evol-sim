@@ -21,11 +21,17 @@ namespace EvolutionSimulator.Creature
         private float baseAngle = 0f;
 
         private bool debugMode = false;
+        private CreatureEnergy creatureEnergy;
 
         void Awake()
         {
             SetupLineRenderer();
             SetupDebugLine();
+        }
+
+        void Start()
+        {
+            creatureEnergy = GetComponentInParent<CreatureEnergy>();
         }
 
         public void Initialize(
@@ -130,6 +136,16 @@ namespace EvolutionSimulator.Creature
                 modifiedT = Mathf.PI + (remainingTime / slowDuration) * Mathf.PI;
             }
             currentAngle = ((Mathf.Sin(modifiedT - Mathf.PI / 2) + 1f) / 2f) * maxAngle;
+
+            // Calculate energy cost for movement
+            if (creatureEnergy != null && creatureEnergy.IsAlive) // Only check age-based death
+            {
+                float angleChange = Mathf.Abs(currentAngle - prevAngle) / Time.deltaTime;
+                if (angleChange > 0.001f) // Avoid tiny floating point values
+                {
+                    creatureEnergy.ConsumeMovementEnergy(angleChange);
+                }
+            }
 
             Vector3 anchorPosition = parentNode.transform.position;
             Vector3 childPosition =

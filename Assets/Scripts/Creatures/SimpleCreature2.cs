@@ -63,10 +63,12 @@ namespace EvolutionSimulator.Creature
             segment1;
         private Rigidbody2D creatureRigidbody;
         private LineRenderer velocityDebugLine;
+        private CreatureEnergy creatureEnergy;
 
         void Start()
         {
             SetupRigidbody();
+            SetupEnergySystem();
             CreateNodes();
             CreateSegments();
             SetupVelocityDebug();
@@ -75,10 +77,18 @@ namespace EvolutionSimulator.Creature
 
         void Update()
         {
-            // UpdateRotation();
-            // ApplyThrust();
-            // ApplySlidingFriction();
-            // UpdateVelocityDebug();
+            // Only update if creature is alive
+            if (creatureEnergy != null && !creatureEnergy.IsAlive)
+            {
+                // Creature is dead, disable updates
+                enabled = false;
+                return;
+            }
+
+            UpdateRotation();
+            ApplyThrust();
+            ApplySlidingFriction();
+            UpdateVelocityDebug();
         }
 
         void SetupRigidbody()
@@ -87,11 +97,42 @@ namespace EvolutionSimulator.Creature
             creatureRigidbody.gravityScale = 0f;
         }
 
+        void SetupEnergySystem()
+        {
+            // Add energy system if not present
+            creatureEnergy = GetComponent<CreatureEnergy>();
+            if (creatureEnergy == null)
+            {
+                creatureEnergy = gameObject.AddComponent<CreatureEnergy>();
+            }
+
+            // Set creature tag for food detection (create "Creature" tag in Tag Manager if needed)
+            try
+            {
+                gameObject.tag = "Creature";
+            }
+            catch (UnityException)
+            {
+                Debug.LogWarning(
+                    "Creature tag not found. Create 'Creature' tag in Tag Manager for food detection."
+                );
+            }
+
+            // Subscribe to death event
+            creatureEnergy.OnDeath.AddListener(OnCreatureDeath);
+        }
+
         void CreateNodes()
         {
             node0 = CreateNode("Node0", Vector3.zero);
             node1 = CreateNode("Node1", Vector3.right * segmentLength);
             node2 = CreateNode("Node2", Vector3.right * segmentLength * 2);
+
+            // Add food detector to head node (node0)
+            if (node0.GetComponent<FoodDetector>() == null)
+            {
+                node0.gameObject.AddComponent<FoodDetector>();
+            }
         }
 
         Node CreateNode(string name, Vector3 position)
@@ -229,6 +270,26 @@ namespace EvolutionSimulator.Creature
             velocityDebugLine.SetPosition(1, endPos);
         }
 
+        void OnCreatureDeath()
+        {
+            Debug.Log(
+                $"Creature {name} died of old age at {creatureEnergy.Age:F1}s with {creatureEnergy.CurrentEnergy:F1} energy remaining"
+            );
+
+            // Visual indication of death
+            if (node0 != null)
+                node0.GetComponent<SpriteRenderer>().color = Color.red;
+            if (node1 != null)
+                node1.GetComponent<SpriteRenderer>().color = Color.red;
+            if (node2 != null)
+                node2.GetComponent<SpriteRenderer>().color = Color.red;
+
+            // Destroy creature after brief visual feedback
+            Destroy(gameObject, 0.5f); // 0.5 second delay to see death effect
+
+            // Could add death effects, spawn particles, etc.
+        }
+
         void OnValidate()
         {
             oscillationSpeed = Mathf.Clamp(oscillationSpeed, 0.1f, 10f);
@@ -242,6 +303,15 @@ namespace EvolutionSimulator.Creature
 
             if (Application.isPlaying)
                 UpdateDebugMode();
+        }
+
+        void OnDestroy()
+        {
+            // Clean up event listeners
+            if (creatureEnergy != null)
+            {
+                creatureEnergy.OnDeath.RemoveListener(OnCreatureDeath);
+            }
         }
     }
 }

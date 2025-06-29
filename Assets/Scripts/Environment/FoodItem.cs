@@ -14,6 +14,10 @@ namespace EvolutionSimulator.Environment
         [SerializeField]
         private float foodSize = 0.5f;
 
+        [Header("Collision Detection")]
+        [SerializeField]
+        private bool enableAutoConsumption = false; // Disabled by default now
+
         private FoodSpawner parentSpawner;
         private SpriteRenderer spriteRenderer;
         private CircleCollider2D foodCollider;
@@ -69,33 +73,28 @@ namespace EvolutionSimulator.Environment
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (isConsumed)
+            // Only auto-consume if enabled (disabled by default now)
+            if (!enableAutoConsumption || isConsumed)
                 return;
 
             // Check if the colliding object can consume food
-            // This will be expanded when creature system is implemented
             if (other.CompareTag("Creature") || other.name.Contains("Motor"))
             {
                 ConsumeFood(other.gameObject);
             }
         }
 
-        void ConsumeFood(GameObject consumer)
+        public void ConsumeFood(GameObject consumer)
         {
             if (isConsumed)
                 return;
 
             isConsumed = true;
 
-            // Notify spawner about consumption
             if (parentSpawner != null)
             {
                 parentSpawner.OnFoodConsumed(this, transform.position);
             }
-
-            // Add consumption effect here (particles, sound, etc.)
-
-            // Destroy the food object
             Destroy(gameObject);
         }
 

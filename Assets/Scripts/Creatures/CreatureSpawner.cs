@@ -33,7 +33,7 @@ namespace EvolutionSimulator.Creature
             }
         }
 
-        public GameObject SpawnCreature()
+        public GameObject SpawnCreature(string creatureName = null)
         {
             Vector3 spawnPosition = GetValidSpawnPosition();
             if (spawnPosition == Vector3.zero)
@@ -45,8 +45,21 @@ namespace EvolutionSimulator.Creature
             CreatureGenome genome = RandomGeneGenerator.GenerateRandomGenome();
             GameObject creature = CreatureBuilder.BuildCreature(genome, spawnPosition);
 
-            spawnedPositions.Add(spawnPosition);
+            if (creature != null)
+            {
+                if (!string.IsNullOrEmpty(creatureName))
+                    creature.name = creatureName;
+
+                spawnedPositions.Add(spawnPosition);
+            }
+
             return creature;
+        }
+
+        // Overload for backward compatibility
+        public GameObject SpawnCreature()
+        {
+            return SpawnCreature(null);
         }
 
         Vector3 GetValidSpawnPosition()
@@ -90,6 +103,11 @@ namespace EvolutionSimulator.Creature
         public void ClearSpawnedPositions()
         {
             spawnedPositions.Clear();
+        }
+
+        public void RemoveSpawnPosition(Vector3 position)
+        {
+            spawnedPositions.Remove(position);
         }
     }
 }

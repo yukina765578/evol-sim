@@ -17,15 +17,39 @@ namespace EvolutionSimulator.Creature
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
 
-            // Setup physics (same as SimpleCreature2)
+            // Set creature tag for food detection
+            try
+            {
+                creatureObj.tag = "Creature";
+            }
+            catch (UnityException)
+            {
+                Debug.LogWarning(
+                    "Creature tag not found. Create 'Creature' tag in Tag Manager for food detection."
+                );
+            }
+
+            // Setup physics
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
+
+            // Add energy system (5-minute lifespan, age-only death)
+            var energy = creatureObj.AddComponent<CreatureEnergy>();
 
             // Create creature structure
             var (nodes, segments) = CreateCreature(genome, creatureObj);
 
+            // Add food detector to root node (head-only feeding)
+            if (nodes.Count > 0)
+            {
+                var foodDetector = nodes[0].gameObject.AddComponent<FoodDetector>();
+            }
+
             // Add movement controller
             var controller = creatureObj.AddComponent<CreatureController>();
+
+            // Subscribe to death event for visual feedback and cleanup
+            energy.OnDeath.AddListener(() => OnCreatureDeath(creatureObj));
 
             return creatureObj;
         }
@@ -38,8 +62,8 @@ namespace EvolutionSimulator.Creature
             var nodes = new List<Node>();
             var segments = new List<Segment>();
 
-            // Create root node at (0,0)
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
+            // Create root node at (0,0) - this becomes the head
+            Node rootNode = CreateNode("HeadNode", Vector3.zero, creatureObj.transform);
             nodes.Add(rootNode);
 
             var parentGenes = genome.GetParentGenes();
@@ -138,6 +162,31 @@ namespace EvolutionSimulator.Creature
             );
 
             return segment;
+        }
+
+        static void OnCreatureDeath(GameObject creature)
+        {
+            if (creature != null)
+            {
+                var energy = creature.GetComponent<CreatureEnergy>();
+                Debug.Log(
+                    $"Creature {creature.name} died of old age at {energy?.Age:F1}s with {energy?.CurrentEnergy:F1} energy remaining"
+                );
+
+                // Visual death indication (brief moment before destruction)
+                var nodes = creature.GetComponentsInChildren<Node>();
+                foreach (var node in nodes)
+                {
+                    if (node != null)
+                        node.GetComponent<SpriteRenderer>().color = Color.red;
+                }
+
+                // Destroy creature after brief visual feedback
+                Object.Destroy(creature, 0.5f); // 0.5 second delay to see death effect
+
+                // Note: PopulationManager automatically handles death tracking and statistics
+                // Could add death effects, particles, etc. here
+            }
         }
     }
 }
