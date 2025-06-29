@@ -75,10 +75,10 @@ namespace EvolutionSimulator.Creature
 
         void Update()
         {
-            UpdateRotation();
-            ApplyThrust();
-            ApplySlidingFriction();
-            UpdateVelocityDebug();
+            // UpdateRotation();
+            // ApplyThrust();
+            // ApplySlidingFriction();
+            // UpdateVelocityDebug();
         }
 
         void SetupRigidbody()
