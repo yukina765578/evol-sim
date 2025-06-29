@@ -184,6 +184,21 @@ namespace EvolutionSimulator.Creature
             activeCreatures.Remove(creature);
         }
 
+        public void RegisterExistingCreature(GameObject creature)
+        {
+            if (creature != null && !activeCreatures.Contains(creature))
+            {
+                var energy = creature.GetComponent<CreatureEnergy>();
+                if (energy != null)
+                {
+                    energy.OnDeath.AddListener(() => OnCreatureDeath(creature, energy.Age));
+                }
+
+                activeCreatures.Add(creature);
+                totalCreaturesSpawned++;
+            }
+        }
+
         void OnGUI()
         {
             if (!showSpawnProgress)

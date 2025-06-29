@@ -26,25 +26,36 @@ namespace EvolutionSimulator.Creature
         private float age = 0f;
 
         [SerializeField]
-        private float maxAge = 30f; // 5 minutes = 300 seconds
+        private float maxAge = 30f;
+
+        [Header("Reproduction")]
+        [SerializeField]
+        private float reproductionThreshold = 80f;
 
         [Header("Events")]
         public UnityEvent<float> OnEnergyChanged = new UnityEvent<float>();
         public UnityEvent OnDeath = new UnityEvent();
         public UnityEvent<float> OnFoodConsumed = new UnityEvent<float>();
+        public UnityEvent<bool> OnReproductionReadyChanged = new UnityEvent<bool>();
 
         private int segmentCount = 0;
+        private bool wasReproductionReady = false;
+        private CircleCollider2D reproductionCollider;
+        private Node[] creatureNodes;
 
         public float CurrentEnergy => currentEnergy;
         public float MaxEnergy => maxEnergy;
         public float Age => age;
         public float EnergyRatio => currentEnergy / maxEnergy;
         public bool IsAlive => age < maxAge;
+        public bool IsReproductionReady => currentEnergy >= reproductionThreshold && IsAlive;
 
         void Start()
         {
             segmentCount = GetComponentsInChildren<Segment>().Length;
+            creatureNodes = GetComponentsInChildren<Node>();
             currentEnergy = Mathf.Min(currentEnergy, maxEnergy);
+            SetupReproductionCollider();
         }
 
         void Update()
@@ -54,9 +65,40 @@ namespace EvolutionSimulator.Creature
 
             age += Time.deltaTime;
             ConsumeBasalEnergy();
-
+            CheckReproductionState();
             CheckDeath();
         }
+
+        void SetupReproductionCollider()
+        {
+            reproductionCollider = gameObject.AddComponent<CircleCollider2D>();
+            reproductionCollider.isTrigger = true;
+            reproductionCollider.radius = 3f;
+            reproductionCollider.enabled = false;
+        }
+
+        void CheckReproductionState()
+        {
+            bool currentlyReady = IsReproductionReady;
+
+            if (currentlyReady != wasReproductionReady)
+            {
+                wasReproductionReady = currentlyReady;
+                reproductionCollider.enabled = currentlyReady;
+
+                // Change node colors
+                Color targetColor = currentlyReady ? Color.red : Color.blue;
+                foreach (Node node in creatureNodes)
+                {
+                    if (node != null)
+                        node.SetColor(targetColor);
+                }
+
+                OnReproductionReadyChanged?.Invoke(currentlyReady);
+            }
+        }
+
+        // Collision handling moved to ReproductionController
 
         void ConsumeBasalEnergy()
         {
@@ -67,7 +109,7 @@ namespace EvolutionSimulator.Creature
         public void ConsumeMovementEnergy(float angleChange)
         {
             if (!IsAlive)
-                return; // Only stop consuming energy if dead from age
+                return;
 
             float energyCost =
                 Mathf.Pow(1 + angleChange, powerExponent) * movementConstant * Time.deltaTime;
@@ -92,7 +134,7 @@ namespace EvolutionSimulator.Creature
             if (age >= maxAge)
             {
                 OnDeath?.Invoke();
-                enabled = false; // Stop processing
+                enabled = false;
             }
         }
 
@@ -102,6 +144,7 @@ namespace EvolutionSimulator.Creature
             basalConstant = Mathf.Max(0, basalConstant);
             movementConstant = Mathf.Max(0, movementConstant);
             powerExponent = Mathf.Clamp(powerExponent, 1f, 5f);
+            reproductionThreshold = Mathf.Clamp(reproductionThreshold, 0, maxEnergy);
         }
     }
 }

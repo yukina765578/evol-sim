@@ -7,6 +7,7 @@ namespace EvolutionSimulator.Creature
         private SpriteRenderer spriteRenderer;
         private float size = 1f;
         private Color nodeColor = Color.blue;
+        private Color originalColor = Color.blue;
 
         private Vector3 prevPosition;
 
@@ -19,8 +20,21 @@ namespace EvolutionSimulator.Creature
         {
             size = nodeSize;
             nodeColor = color;
+            originalColor = color;
             prevPosition = transform.localPosition;
 
+            UpdateVisuals();
+        }
+
+        public void SetColor(Color newColor)
+        {
+            nodeColor = newColor;
+            UpdateVisuals();
+        }
+
+        public void RestoreOriginalColor()
+        {
+            nodeColor = originalColor;
             UpdateVisuals();
         }
 
@@ -31,19 +45,16 @@ namespace EvolutionSimulator.Creature
 
         void SetupRenderer()
         {
-            // Get or add SpriteRenderer
             spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer == null)
                 spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
 
-            // Use Unity's built-in circle sprite
             if (spriteRenderer.sprite == null)
             {
                 spriteRenderer.sprite = CreateCircleSprite();
             }
 
-            // Set initial properties
-            spriteRenderer.sortingOrder = 1; // Above segments
+            spriteRenderer.sortingOrder = 1;
         }
 
         void UpdateVisuals()
@@ -57,7 +68,6 @@ namespace EvolutionSimulator.Creature
 
         Sprite CreateCircleSprite()
         {
-            // Create a simple circle texture programmatically
             int resolution = 64;
             Texture2D texture = new Texture2D(resolution, resolution);
 
