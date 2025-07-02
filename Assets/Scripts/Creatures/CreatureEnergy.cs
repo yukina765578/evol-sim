@@ -26,7 +26,7 @@ namespace EvolutionSimulator.Creature
         private float age = 0f;
 
         [SerializeField]
-        private float maxAge = 30f;
+        private float maxAge = 300f;
 
         [Header("Reproduction")]
         [SerializeField]

@@ -36,6 +36,13 @@ namespace EvolutionSimulator.Creature
             // Add energy system (5-minute lifespan, age-only death)
             var energy = creatureObj.AddComponent<CreatureEnergy>();
 
+            // Add reproduction controller
+            var reproduction = creatureObj.AddComponent<ReproductionController>();
+
+            // Add reproduction trigger for collision detection
+            var reproductionTrigger = creatureObj.AddComponent<ReproductionTrigger>();
+            reproductionTrigger.Initialize(reproduction);
+
             // Create creature structure
             var (nodes, segments) = CreateCreature(genome, creatureObj);
 

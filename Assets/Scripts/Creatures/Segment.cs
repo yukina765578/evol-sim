@@ -85,6 +85,8 @@ namespace EvolutionSimulator.Creature
             thrustDebugLine.startWidth = 0.05f;
             thrustDebugLine.endWidth = 0.05f;
             thrustDebugLine.enabled = false;
+            thrustDebugLine.startColor = Color.green;
+            thrustDebugLine.endColor = Color.green;
         }
 
         void UpdateVisuals()

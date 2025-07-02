@@ -53,7 +53,7 @@ namespace EvolutionSimulator.Creature
         void TryReproduce(GameObject partner)
         {
             // Check population limit
-            if (populationManager.ActiveCreatureCount >= populationManager.PopulationSize)
+            if (populationManager.ActiveCreatureCount >= populationManager.MaxPopulationSize)
                 return;
 
             // Get genomes from both parents

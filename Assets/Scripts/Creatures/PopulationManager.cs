@@ -11,6 +11,10 @@ namespace EvolutionSimulator.Creature
         private int initialPopulationSize = 50;
 
         [SerializeField]
+        [Range(10, 1000)]
+        private int maxPopulationSize = 200;
+
+        [SerializeField]
         private bool spawnOnStart = true;
 
         [Header("Statistics")]
@@ -35,6 +39,7 @@ namespace EvolutionSimulator.Creature
         private List<float> lifespanHistory = new List<float>();
 
         public int PopulationSize => initialPopulationSize;
+        public int MaxPopulationSize => maxPopulationSize;
         public int ActiveCreatureCount => activeCreatures.Count;
         public int TotalSpawned => totalCreaturesSpawned;
         public int TotalDeaths => totalCreatureDeaths;

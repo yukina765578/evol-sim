@@ -70,7 +70,6 @@ namespace EvolutionSimulator.Creature
             if (otherCreature == reproductionController.gameObject)
                 return;
 
-            Debug.Log($"Node collision detected: {name} -> {otherCreature.name}");
             reproductionController.OnNodeCollision(otherCreature);
         }
 
