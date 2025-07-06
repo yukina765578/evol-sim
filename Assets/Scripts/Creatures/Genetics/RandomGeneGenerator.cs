@@ -6,22 +6,19 @@ namespace EvolutionSimulator.Creature
     {
         private const int MIN_NODES = 2;
         private const int MAX_NODES = 20;
-        private const int BRAIN_INPUTS = 2; // food distance, energy
+        private const int BRAIN_INPUTS = 12;
 
-        // Original method for backward compatibility
         public static CreatureGenome GenerateRandomGenome()
         {
             var (bodyGenome, _) = GenerateRandomGenomeWithBrain();
             return bodyGenome;
         }
 
-        // New method that generates both body and brain
         public static (CreatureGenome, NEATGenome) GenerateRandomGenomeWithBrain()
         {
-            CreatureGenome bodyGenome = GenerateRandomBodyGenome();
-            int segmentCount = bodyGenome.NodeCount - 1;
-            NEATGenome brainGenome = GenerateRandomBrain(segmentCount);
-            return (bodyGenome, brainGenome);
+            CreatureGenome body = GenerateRandomBodyGenome();
+            NEATGenome brain = GenerateRandomBrain(body.NodeCount - 1);
+            return (body, brain);
         }
 
         public static CreatureGenome GenerateRandomBodyGenome()
@@ -29,15 +26,14 @@ namespace EvolutionSimulator.Creature
             int nodeCount = Random.Range(MIN_NODES, MAX_NODES + 1);
             NodeGene[] nodes = new NodeGene[nodeCount];
 
-            nodes[0] = new NodeGene(-1, 0f, 0f);
+            nodes[0] = new NodeGene(-1, 0f, 0f); // Root node
 
             for (int i = 1; i < nodeCount; i++)
             {
-                int parentIndex = Random.Range(0, i);
                 nodes[i] = new NodeGene(
-                    parentIndex,
-                    Random.Range(0f, 360f), // baseAngle
-                    Random.Range(-180f, 180f) // maxAngle
+                    Random.Range(0, i), // Parent index
+                    Random.Range(0f, 360f), // Base angle
+                    Random.Range(-180f, 180f) // Max angle
                 );
             }
 
@@ -48,37 +44,35 @@ namespace EvolutionSimulator.Creature
         {
             NEATGenome brain = new NEATGenome(BRAIN_INPUTS, outputCount);
 
-            // Add random connections between inputs and outputs
+            // Connect inputs to outputs
             for (int output = 0; output < outputCount; output++)
             {
                 int outputNodeId = BRAIN_INPUTS + output;
 
-                // Connect each input to this output with random probability
                 for (int input = 0; input < BRAIN_INPUTS; input++)
                 {
-                    if (Random.value < 0.7f) // 70% chance of connection
+                    if (Random.value < 0.7f) // 70% connection chance
                     {
                         brain.AddConnection(
                             new ConnectionGene(
                                 input,
                                 outputNodeId,
                                 Random.Range(-2f, 2f),
-                                input * outputCount + output,
-                                true
+                                input * outputCount + output
                             )
                         );
                     }
                 }
             }
 
-            // Add some hidden nodes and connections for complexity
-            int hiddenNodeCount = Random.Range(0, 3);
-            for (int h = 0; h < hiddenNodeCount; h++)
+            // Add hidden nodes
+            int hiddenCount = Random.Range(0, 3);
+            for (int h = 0; h < hiddenCount; h++)
             {
                 int hiddenId = BRAIN_INPUTS + outputCount + h;
                 brain.AddNode(new NodeGeneNEAT(hiddenId, NodeType.Hidden, Random.Range(-1f, 1f)));
 
-                // Connect inputs to hidden
+                // Input to hidden connections
                 for (int input = 0; input < BRAIN_INPUTS; input++)
                 {
                     if (Random.value < 0.5f)
@@ -88,14 +82,13 @@ namespace EvolutionSimulator.Creature
                                 input,
                                 hiddenId,
                                 Random.Range(-2f, 2f),
-                                1000 + h * BRAIN_INPUTS + input,
-                                true
+                                1000 + h * BRAIN_INPUTS + input
                             )
                         );
                     }
                 }
 
-                // Connect hidden to outputs
+                // Hidden to output connections
                 for (int output = 0; output < outputCount; output++)
                 {
                     if (Random.value < 0.5f)
@@ -105,8 +98,7 @@ namespace EvolutionSimulator.Creature
                                 hiddenId,
                                 BRAIN_INPUTS + output,
                                 Random.Range(-2f, 2f),
-                                2000 + h * outputCount + output,
-                                true
+                                2000 + h * outputCount + output
                             )
                         );
                     }
@@ -118,35 +110,37 @@ namespace EvolutionSimulator.Creature
 
         public static CreatureGenome GenerateMinimalGenome()
         {
-            NodeGene[] nodes = new NodeGene[2];
-            nodes[0] = new NodeGene(-1, 0f, 0f);
-            nodes[1] = new NodeGene(0, 0f, 45f);
-            return new CreatureGenome(nodes);
+            return new CreatureGenome(
+                new NodeGene[] { new NodeGene(-1, 0f, 0f), new NodeGene(0, 0f, 45f) }
+            );
         }
 
         public static (CreatureGenome, NEATGenome) GenerateMinimalGenomeWithBrain()
         {
-            CreatureGenome bodyGenome = GenerateMinimalGenome();
-            NEATGenome brainGenome = GenerateRandomBrain(1); // 1 segment
-            return (bodyGenome, brainGenome);
+            CreatureGenome body = GenerateMinimalGenome();
+            NEATGenome brain = GenerateRandomBrain(1);
+            return (body, brain);
         }
 
         public static CreatureGenome GenerateTestGenome()
         {
-            NodeGene[] nodes = new NodeGene[5];
-            nodes[0] = new NodeGene(-1, 0f, 0f);
-            nodes[1] = new NodeGene(0, 30f, 45f);
-            nodes[2] = new NodeGene(1, 60f, -30f);
-            nodes[3] = new NodeGene(1, -45f, 60f);
-            nodes[4] = new NodeGene(2, 90f, -90f);
-            return new CreatureGenome(nodes);
+            return new CreatureGenome(
+                new NodeGene[]
+                {
+                    new NodeGene(-1, 0f, 0f),
+                    new NodeGene(0, 30f, 45f),
+                    new NodeGene(1, 60f, -30f),
+                    new NodeGene(1, -45f, 60f),
+                    new NodeGene(2, 90f, -90f),
+                }
+            );
         }
 
         public static (CreatureGenome, NEATGenome) GenerateTestGenomeWithBrain()
         {
-            CreatureGenome bodyGenome = GenerateTestGenome();
-            NEATGenome brainGenome = GenerateRandomBrain(4); // 4 segments
-            return (bodyGenome, brainGenome);
+            CreatureGenome body = GenerateTestGenome();
+            NEATGenome brain = GenerateRandomBrain(4);
+            return (body, brain);
         }
     }
 }

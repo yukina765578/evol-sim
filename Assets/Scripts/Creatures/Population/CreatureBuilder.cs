@@ -11,96 +11,92 @@ namespace EvolutionSimulator.Creature
         private static readonly Color NODE_COLOR = Color.blue;
         private static readonly Color SEGMENT_COLOR = Color.white;
 
-        // Original method for backward compatibility
         public static GameObject BuildCreature(CreatureGenome genome, Vector3 position)
         {
             return BuildCreature(genome, null, position);
         }
 
-        // New method with brain support
         public static GameObject BuildCreature(
             CreatureGenome genome,
-            NEATGenome brainGenome,
+            NEATGenome brain,
             Vector3 position
         )
         {
-            GameObject creatureObj = new GameObject("Creature");
-            creatureObj.transform.position = position;
+            GameObject creature = new GameObject("Creature");
+            creature.transform.position = position;
 
+            SetupComponents(creature, brain);
+            var (nodes, segments) = BuildBody(genome, creature);
+
+            if (nodes.Count > 0)
+                nodes[0].gameObject.AddComponent<FoodDetector>();
+
+            return creature;
+        }
+
+        static void SetupComponents(GameObject creature, NEATGenome brain)
+        {
             try
             {
-                creatureObj.tag = "Creature";
+                creature.tag = "Creature";
             }
             catch (UnityException)
             {
                 Debug.LogWarning("Create 'Creature' tag in Tag Manager");
             }
 
-            var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
-            rigidbody.gravityScale = 0f;
+            var rb = creature.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0f;
 
-            var energy = creatureObj.AddComponent<CreatureEnergy>();
-            var reproduction = creatureObj.AddComponent<ReproductionController>();
-            var reproductionTrigger = creatureObj.AddComponent<ReproductionTrigger>();
-            reproductionTrigger.Initialize(reproduction);
+            var energy = creature.AddComponent<CreatureEnergy>();
+            var sensor = creature.AddComponent<CreatureSensor>();
+            var reproduction = creature.AddComponent<ReproductionController>();
+            var trigger = creature.AddComponent<ReproductionTrigger>();
+            trigger.Initialize(reproduction);
 
-            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
+            creature.AddComponent<CreatureController>();
 
-            if (nodes.Count > 0)
-                nodes[0].gameObject.AddComponent<FoodDetector>();
-
-            var controller = creatureObj.AddComponent<CreatureController>();
-
-            // Add brain if genome provided
-            if (brainGenome != null)
+            if (brain != null)
             {
-                var brain = creatureObj.AddComponent<CreatureBrain>();
-                brain.Initialize(brainGenome);
+                var brainComponent = creature.AddComponent<CreatureBrain>();
+                brainComponent.Initialize(brain);
             }
 
-            energy.OnDeath.AddListener(() => OnCreatureDeath(creatureObj));
-
-            return creatureObj;
+            energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
         }
 
-        static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
-            CreatureGenome genome,
-            GameObject creatureObj
-        )
+        static (List<Node>, List<Segment>) BuildBody(CreatureGenome genome, GameObject creature)
         {
             var nodes = new List<Node>();
             var segments = new List<Segment>();
 
-            // Create root node at origin
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
+            Node rootNode = CreateNode("RootNode", Vector3.zero, creature.transform);
             nodes.Add(rootNode);
 
-            // Create remaining nodes sequentially
             for (int i = 1; i < genome.NodeCount; i++)
             {
-                var nodeGene = genome.nodes[i];
-                Node parentNode = nodes[nodeGene.parentIndex];
+                var gene = genome.nodes[i];
+                Node parent = nodes[gene.parentIndex];
 
-                // Calculate position based on parent and base angle
-                float angle = nodeGene.baseAngle * Mathf.Deg2Rad;
-                Vector3 nodePos =
-                    parentNode.transform.localPosition
+                float angle = gene.baseAngle * Mathf.Deg2Rad;
+                Vector3 pos =
+                    parent.transform.localPosition
                     + new Vector3(
                         SEGMENT_LENGTH * Mathf.Cos(angle),
                         SEGMENT_LENGTH * Mathf.Sin(angle),
                         0
                     );
 
-                Node newNode = CreateNode($"Node_{i}", nodePos, creatureObj.transform);
+                Node node = CreateNode($"Node_{i}", pos, creature.transform);
                 Segment segment = CreateSegment(
                     $"Segment_{i}",
-                    nodeGene,
-                    parentNode,
-                    newNode,
-                    creatureObj.transform
+                    gene,
+                    parent,
+                    node,
+                    creature.transform
                 );
 
-                nodes.Add(newNode);
+                nodes.Add(node);
                 segments.Add(segment);
             }
 
@@ -121,13 +117,13 @@ namespace EvolutionSimulator.Creature
         static Segment CreateSegment(
             string name,
             NodeGene gene,
-            Node parentNode,
-            Node childNode,
-            Transform parent
+            Node parent,
+            Node child,
+            Transform creatureParent
         )
         {
             GameObject segmentObj = new GameObject(name);
-            segmentObj.transform.SetParent(parent);
+            segmentObj.transform.SetParent(creatureParent);
 
             Segment segment = segmentObj.AddComponent<Segment>();
             segment.Initialize(
@@ -136,10 +132,9 @@ namespace EvolutionSimulator.Creature
                 SEGMENT_COLOR,
                 gene.maxAngle,
                 gene.baseAngle,
-                parentNode,
-                childNode
+                parent,
+                child
             );
-
             return segment;
         }
 

@@ -12,10 +12,6 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private LayerMask foodLayerMask = -1;
 
-        [Header("Debug")]
-        [SerializeField]
-        private bool showDetectionRadius = false;
-
         [SerializeField]
         private Color debugColor = Color.green;
 
@@ -46,64 +42,24 @@ namespace EvolutionSimulator.Creature
         void OnTriggerEnter2D(Collider2D other)
         {
             if (!creatureEnergy.IsAlive)
-                return; // Only check age, not energy
+                return;
 
             FoodItem foodItem = other.GetComponent<FoodItem>();
             if (foodItem != null && !foodItem.IsConsumed)
             {
-                // Check if this food hasn't been consumed yet
                 ConsumeFood(foodItem);
             }
         }
 
         void ConsumeFood(FoodItem foodItem)
         {
-            // Double-check to prevent double consumption
             if (foodItem.IsConsumed)
                 return;
 
             float energyGained = foodItem.EnergyValue;
             creatureEnergy.AddEnergy(energyGained);
 
-            // Trigger the FoodItem's existing consumption system
-            // This will handle destruction + notify spawner for respawn
             foodItem.ConsumeFood(gameObject);
-        }
-
-        void OnDrawGizmos()
-        {
-            if (!showDetectionRadius)
-                return;
-
-            Gizmos.color = debugColor;
-
-            // Draw wire circle using multiple line segments
-            Vector3 center = transform.position;
-            int segments = 32;
-            float angleStep = 360f / segments;
-
-            for (int i = 0; i < segments; i++)
-            {
-                float angle1 = i * angleStep * Mathf.Deg2Rad;
-                float angle2 = (i + 1) * angleStep * Mathf.Deg2Rad;
-
-                Vector3 point1 =
-                    center
-                    + new Vector3(
-                        Mathf.Cos(angle1) * detectionRadius,
-                        Mathf.Sin(angle1) * detectionRadius,
-                        0
-                    );
-                Vector3 point2 =
-                    center
-                    + new Vector3(
-                        Mathf.Cos(angle2) * detectionRadius,
-                        Mathf.Sin(angle2) * detectionRadius,
-                        0
-                    );
-
-                Gizmos.DrawLine(point1, point2);
-            }
         }
 
         void OnValidate()

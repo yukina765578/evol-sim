@@ -5,7 +5,7 @@ namespace EvolutionSimulator.Creature
 {
     public class CreatureTest : MonoBehaviour
     {
-        [Header("Test Controls")]
+        [Header("Test Settings")]
         [SerializeField]
         private bool spawnOnStart = true;
 
@@ -15,15 +15,15 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private bool enableBrain = true;
 
-        [Header("Sample Genes")]
+        [Header("Test Genes")]
         [SerializeField]
         private NodeGene[] testNodes = new NodeGene[]
         {
-            new NodeGene(-1, 0f, 0f), // Root node (no movement)
-            new NodeGene(0, 0f, 45f), // Connect to root
-            new NodeGene(0, 120f, -45f), // Also connect to root
-            new NodeGene(1, 45f, -60f), // Connect to node 1
-            new NodeGene(2, 180f, 120f), // Connect to node 2
+            new NodeGene(-1, 0f, 0f),
+            new NodeGene(0, 0f, 45f),
+            new NodeGene(0, 120f, -45f),
+            new NodeGene(1, 45f, -60f),
+            new NodeGene(2, 180f, 120f),
         };
 
         private GameObject currentCreature;
@@ -41,20 +41,16 @@ namespace EvolutionSimulator.Creature
 
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
                 SpawnTestCreature();
-
             if (Keyboard.current.cKey.wasPressedThisFrame)
                 ClearCreature();
-
             if (Keyboard.current.rKey.wasPressedThisFrame)
             {
                 RandomizeNodes();
                 SpawnTestCreature();
             }
-
             if (Keyboard.current.bKey.wasPressedThisFrame)
             {
                 enableBrain = !enableBrain;
-                Debug.Log($"Brain control: {(enableBrain ? "Enabled" : "Disabled")}");
                 SpawnTestCreature();
             }
         }
@@ -65,18 +61,15 @@ namespace EvolutionSimulator.Creature
             ClearCreature();
 
             CreatureGenome bodyGenome = new CreatureGenome(testNodes);
-            NEATGenome brainGenome = null;
-
-            if (enableBrain)
-            {
-                int segmentCount = bodyGenome.NodeCount - 1;
-                brainGenome = RandomGeneGenerator.GenerateRandomBrain(segmentCount);
-            }
+            NEATGenome brainGenome = enableBrain
+                ? RandomGeneGenerator.GenerateRandomBrain(bodyGenome.NodeCount - 1)
+                : null;
 
             currentCreature = CreatureBuilder.BuildCreature(bodyGenome, brainGenome, spawnPosition);
 
-            string brainStatus = enableBrain ? "with brain" : "without brain";
-            Debug.Log($"Spawned creature with {bodyGenome.NodeCount} nodes {brainStatus}");
+            Debug.Log(
+                $"Spawned creature: {bodyGenome.NodeCount} nodes, brain {(enableBrain ? "ON" : "OFF")}"
+            );
         }
 
         [ContextMenu("Clear Creature")]
@@ -93,20 +86,6 @@ namespace EvolutionSimulator.Creature
         public void RandomizeNodes()
         {
             testNodes = RandomGeneGenerator.GenerateRandomBodyGenome().nodes;
-        }
-
-        void OnGUI()
-        {
-            GUILayout.BeginArea(new Rect(10, 10, 300, 180));
-            GUILayout.Label("Brain-Controlled Creature Test:");
-            GUILayout.Label("SPACE - Spawn creature");
-            GUILayout.Label("C - Clear creature");
-            GUILayout.Label("R - Randomize & spawn");
-            GUILayout.Label("B - Toggle brain control");
-            GUILayout.Label($"Current: {(currentCreature ? "Active" : "None")}");
-            GUILayout.Label($"Nodes: {testNodes.Length}");
-            GUILayout.Label($"Brain: {(enableBrain ? "ON" : "OFF")}");
-            GUILayout.EndArea();
         }
     }
 }

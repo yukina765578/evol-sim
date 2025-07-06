@@ -204,20 +204,6 @@ namespace EvolutionSimulator.Creature
             }
         }
 
-        void OnGUI()
-        {
-            if (!showSpawnProgress)
-                return;
-
-            GUILayout.BeginArea(new Rect(10, 100, 300, 150));
-            GUILayout.Label($"Population Stats:");
-            GUILayout.Label($"Active: {activeCreatures.Count}");
-            GUILayout.Label($"Total Spawned: {totalCreaturesSpawned}");
-            GUILayout.Label($"Total Deaths: {totalCreatureDeaths}");
-            GUILayout.Label($"Avg Lifespan: {averageLifespan:F1}s");
-            GUILayout.EndArea();
-        }
-
         void OnValidate()
         {
             initialPopulationSize = Mathf.Clamp(initialPopulationSize, 1, 500);
