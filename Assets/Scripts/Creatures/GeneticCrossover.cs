@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creature
@@ -5,152 +6,115 @@ namespace EvolutionSimulator.Creature
     public static class GeneticCrossover
     {
         private const float MUTATION_RATE = 0.1f;
+        private const float STRUCTURAL_MUTATION_RATE = 0.05f;
+        private const int MAX_NODES = 20;
 
-        public static CreatureGenome CrossoverGenomes(
+        public static (CreatureGenome, CreatureGenome) CrossoverGenomes(
             CreatureGenome parent1,
             CreatureGenome parent2
         )
         {
-            var parent1Parents = parent1.GetParentGenes();
-            var parent2Parents = parent2.GetParentGenes();
-            var parent1Children = parent1.GetChildGenes();
-            var parent2Children = parent2.GetChildGenes();
+            int minNodes = Mathf.Min(parent1.NodeCount, parent2.NodeCount);
 
-            // Pool genes by hierarchy
-            var parentPool = new System.Collections.Generic.List<SegmentGene>();
-            parentPool.AddRange(parent1Parents);
-            parentPool.AddRange(parent2Parents);
+            var cutPoints = GenerateCutPoints(minNodes);
+            var offSpringNodes1 = new List<NodeGene>();
+            var offSpringNodes2 = new List<NodeGene>();
 
-            var childPool = new System.Collections.Generic.List<SegmentGene>();
-            childPool.AddRange(parent1Children);
-            childPool.AddRange(parent2Children);
+            bool swapping = false;
+            int cutIndex = 0;
 
-            // Choose offspring parent count with mutation
-            int offspringParentCount = ChooseOffspringParentCount(
-                parent1Parents.Length,
-                parent2Parents.Length
-            );
-            int offspringChildCount = Random.Range(1, Mathf.Max(1, childPool.Count + 1));
-
-            // Create offspring genes
-            var offspringParents = new SegmentGene[offspringParentCount];
-            var offspringChildren = new SegmentGene[offspringChildCount];
-
-            // Select parents from parent pool
-            for (int i = 0; i < offspringParentCount; i++)
+            for (int i = 0; i < minNodes; i++)
             {
-                if (parentPool.Count > 0)
+                if (cutIndex < cutPoints.Length && i == cutPoints[cutIndex])
                 {
-                    int randomIndex = Random.Range(0, parentPool.Count);
-                    offspringParents[i] = parentPool[randomIndex];
-                    // Reset parent index and child count for proper structure
-                    offspringParents[i] = new SegmentGene(
-                        -1,
-                        offspringParents[i].baseAngle,
-                        offspringParents[i].oscSpeed,
-                        offspringParents[i].maxAngle,
-                        offspringParents[i].forwardRatio,
-                        0
-                    );
+                    swapping = !swapping;
+                    cutIndex++;
+                }
+
+                NodeGene node1 = parent1.nodes[i];
+                NodeGene node2 = parent2.nodes[i];
+
+                if (swapping)
+                {
+                    offSpringNodes1.Add(node2);
+                    offSpringNodes2.Add(node1);
+                }
+                else
+                {
+                    offSpringNodes1.Add(node1);
+                    offSpringNodes2.Add(node2);
                 }
             }
 
-            // Select children from child pool
-            for (int i = 0; i < offspringChildCount; i++)
-            {
-                if (childPool.Count > 0)
-                {
-                    int randomIndex = Random.Range(0, childPool.Count);
-                    offspringChildren[i] = childPool[randomIndex];
-                    // Assign to random parent and reset child count
-                    int parentIndex = Random.Range(0, offspringParentCount);
-                    offspringChildren[i] = new SegmentGene(
-                        parentIndex,
-                        offspringChildren[i].baseAngle,
-                        offspringChildren[i].oscSpeed,
-                        offspringChildren[i].maxAngle,
-                        offspringChildren[i].forwardRatio,
-                        0
-                    );
-                }
-            }
+            CreatureGenome offspringGenome1 = new CreatureGenome(offSpringNodes1.ToArray());
+            CreatureGenome offspringGenome2 = new CreatureGenome(offSpringNodes2.ToArray());
 
-            // Combine into single genome
-            var allGenes = new SegmentGene[offspringParents.Length + offspringChildren.Length];
-            System.Array.Copy(offspringParents, 0, allGenes, 0, offspringParents.Length);
-            System.Array.Copy(
-                offspringChildren,
-                0,
-                allGenes,
-                offspringParents.Length,
-                offspringChildren.Length
-            );
+            MutateGenome(offspringGenome1);
+            MutateGenome(offspringGenome2);
 
-            return new CreatureGenome(allGenes);
+            return (offspringGenome1, offspringGenome2);
         }
 
-        static int ChooseOffspringParentCount(int parent1Count, int parent2Count)
+        static int[] GenerateCutPoints(int nodeCount)
         {
-            // Choose base parent count (50/50 from either parent)
-            int baseCount = Random.value < 0.5f ? parent1Count : parent2Count;
+            if (nodeCount <= 2)
+                return new int[0];
 
-            float rand = Random.value;
-            if (rand < 0.5f)
-                return baseCount; // 50% stay same
-            if (rand < 0.7f)
-                return Mathf.Max(1, baseCount - 1); // 20% -1
-            if (rand < 0.9f)
-                return baseCount + 1; // 20% +1
-            return Random.value < 0.5f ? parent1Count : parent2Count; // 10% other parent
+            int numCuts = Random.Range(1, Mathf.Min(4, nodeCount - 1));
+            List<int> cutPoints = new List<int>();
+
+            while (cutPoints.Count < numCuts)
+            {
+                int cutPoint = Random.Range(1, nodeCount - 1);
+                if (!cutPoints.Contains(cutPoint))
+                {
+                    cutPoints.Add(cutPoint);
+                }
+            }
+
+            cutPoints.Sort();
+            return cutPoints.ToArray();
         }
 
         public static void MutateGenome(CreatureGenome genome)
         {
-            for (int i = 0; i < genome.genes.Length; i++)
+            for (int i = 0; i < genome.nodes.Length; i++)
             {
-                genome.genes[i] = MutateGene(genome.genes[i]);
+                genome.nodes[i] = MutateNode(genome.nodes[i]);
             }
         }
 
-        static SegmentGene MutateGene(SegmentGene gene)
+        static NodeGene MutateNode(NodeGene node)
         {
-            var mutated = gene;
+            var mutated = node;
 
             if (Random.value < MUTATION_RATE)
-            {
                 mutated.baseAngle = Mathf.Clamp(
                     mutated.baseAngle + Random.Range(-18f, 18f),
                     0f,
                     360f
                 );
-            }
 
             if (Random.value < MUTATION_RATE)
-            {
                 mutated.oscSpeed = Mathf.Clamp(
                     mutated.oscSpeed + Random.Range(-0.4f, 0.4f),
                     0.5f,
                     8f
                 );
-            }
 
             if (Random.value < MUTATION_RATE)
-            {
                 mutated.maxAngle = Mathf.Clamp(
                     mutated.maxAngle + Random.Range(-18f, 18f),
                     -180f,
                     180f
                 );
-            }
 
             if (Random.value < MUTATION_RATE)
-            {
                 mutated.forwardRatio = Mathf.Clamp(
                     mutated.forwardRatio + Random.Range(-0.05f, 0.05f),
                     0.01f,
-                    0.5f
+                    0.99f
                 );
-            }
 
             return mutated;
         }

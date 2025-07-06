@@ -5,7 +5,6 @@ namespace EvolutionSimulator.Creature
 {
     public static class CreatureBuilder
     {
-        // Constants for creature creation
         private const float SEGMENT_LENGTH = 2f;
         private const float NODE_SIZE = 1f;
         private const float SEGMENT_WIDTH = 0.1f;
@@ -17,51 +16,35 @@ namespace EvolutionSimulator.Creature
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
 
-            // Set creature tag for food detection
             try
             {
                 creatureObj.tag = "Creature";
             }
             catch (UnityException)
             {
-                Debug.LogWarning(
-                    "Creature tag not found. Create 'Creature' tag in Tag Manager for food detection."
-                );
+                Debug.LogWarning("Create 'Creature' tag in Tag Manager");
             }
 
-            // Setup physics
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
 
-            // Add energy system (5-minute lifespan, age-only death)
             var energy = creatureObj.AddComponent<CreatureEnergy>();
-
-            // Add reproduction controller
             var reproduction = creatureObj.AddComponent<ReproductionController>();
-
-            // Add reproduction trigger for collision detection
             var reproductionTrigger = creatureObj.AddComponent<ReproductionTrigger>();
             reproductionTrigger.Initialize(reproduction);
 
-            // Create creature structure
-            var (nodes, segments) = CreateCreature(genome, creatureObj);
+            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
 
-            // Add food detector to root node (head-only feeding)
             if (nodes.Count > 0)
-            {
-                var foodDetector = nodes[0].gameObject.AddComponent<FoodDetector>();
-            }
+                nodes[0].gameObject.AddComponent<FoodDetector>();
 
-            // Add movement controller
             var controller = creatureObj.AddComponent<CreatureController>();
-
-            // Subscribe to death event for visual feedback and cleanup
             energy.OnDeath.AddListener(() => OnCreatureDeath(creatureObj));
 
             return creatureObj;
         }
 
-        static (List<Node> nodes, List<Segment> segments) CreateCreature(
+        static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
             CreatureGenome genome,
             GameObject creatureObj
         )
@@ -69,47 +52,19 @@ namespace EvolutionSimulator.Creature
             var nodes = new List<Node>();
             var segments = new List<Segment>();
 
-            // Create root node at (0,0) - this becomes the head
-            Node rootNode = CreateNode("HeadNode", Vector3.zero, creatureObj.transform);
+            // Create root node at origin
+            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
             nodes.Add(rootNode);
 
-            var parentGenes = genome.GetParentGenes();
-            var childGenes = genome.GetChildGenes();
-
-            // Create parent segments (from root to parent nodes)
-            for (int i = 0; i < parentGenes.Length; i++)
+            // Create remaining nodes sequentially
+            for (int i = 1; i < genome.NodeCount; i++)
             {
-                float angle = parentGenes[i].baseAngle * Mathf.Deg2Rad;
-                Vector3 parentPos = new Vector3(
-                    SEGMENT_LENGTH * Mathf.Cos(angle),
-                    SEGMENT_LENGTH * Mathf.Sin(angle),
-                    0
-                );
+                var nodeGene = genome.nodes[i];
+                Node parentNode = nodes[nodeGene.parentIndex];
 
-                Node parentNode = CreateNode($"ParentNode_{i}", parentPos, creatureObj.transform);
-                Segment parentSegment = CreateSegment(
-                    $"ParentSegment_{i}",
-                    parentGenes[i],
-                    rootNode,
-                    parentNode,
-                    creatureObj.transform
-                );
-
-                nodes.Add(parentNode);
-                segments.Add(parentSegment);
-            }
-
-            // Create child segments (from parent nodes to child nodes)
-            for (int i = 0; i < childGenes.Length; i++)
-            {
-                var childGene = childGenes[i];
-                if (childGene.parentIndex >= parentGenes.Length)
-                    continue;
-
-                Node parentNode = nodes[1 + childGene.parentIndex]; // +1 because root is at index 0
-
-                float angle = childGene.baseAngle * Mathf.Deg2Rad;
-                Vector3 childPos =
+                // Calculate position based on parent and base angle
+                float angle = nodeGene.baseAngle * Mathf.Deg2Rad;
+                Vector3 nodePos =
                     parentNode.transform.localPosition
                     + new Vector3(
                         SEGMENT_LENGTH * Mathf.Cos(angle),
@@ -117,17 +72,17 @@ namespace EvolutionSimulator.Creature
                         0
                     );
 
-                Node childNode = CreateNode($"ChildNode_{i}", childPos, creatureObj.transform);
-                Segment childSegment = CreateSegment(
-                    $"ChildSegment_{i}",
-                    childGene,
+                Node newNode = CreateNode($"Node_{i}", nodePos, creatureObj.transform);
+                Segment segment = CreateSegment(
+                    $"Segment_{i}",
+                    nodeGene,
                     parentNode,
-                    childNode,
+                    newNode,
                     creatureObj.transform
                 );
 
-                nodes.Add(childNode);
-                segments.Add(childSegment);
+                nodes.Add(newNode);
+                segments.Add(segment);
             }
 
             return (nodes, segments);
@@ -146,7 +101,7 @@ namespace EvolutionSimulator.Creature
 
         static Segment CreateSegment(
             string name,
-            SegmentGene gene,
+            NodeGene gene,
             Node parentNode,
             Node childNode,
             Transform parent
@@ -175,24 +130,12 @@ namespace EvolutionSimulator.Creature
         {
             if (creature != null)
             {
-                var energy = creature.GetComponent<CreatureEnergy>();
-                Debug.Log(
-                    $"Creature {creature.name} died of old age at {energy?.Age:F1}s with {energy?.CurrentEnergy:F1} energy remaining"
-                );
-
-                // Visual death indication (brief moment before destruction)
                 var nodes = creature.GetComponentsInChildren<Node>();
                 foreach (var node in nodes)
-                {
                     if (node != null)
                         node.GetComponent<SpriteRenderer>().color = Color.red;
-                }
 
-                // Destroy creature after brief visual feedback
-                Object.Destroy(creature, 0.5f); // 0.5 second delay to see death effect
-
-                // Note: PopulationManager automatically handles death tracking and statistics
-                // Could add death effects, particles, etc. here
+                Object.Destroy(creature, 0.5f);
             }
         }
     }

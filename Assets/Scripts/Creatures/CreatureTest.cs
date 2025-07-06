@@ -12,17 +12,15 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private Vector3 spawnPosition = Vector3.zero;
 
-        [Header("Sample Gene Data")]
+        [Header("Sample Gene")]
         [SerializeField]
-        private SegmentGene[] testGenes = new SegmentGene[]
+        private NodeGene[] testNodes = new NodeGene[]
         {
-            // Parent segments (connect to root node at 0,0)
-            new SegmentGene(-1, 0f, 2f, 45f, 0.2f, 2), // Parent 0: extends right, has 2 children
-            new SegmentGene(-1, 120f, 3f, -30f, 0.8f, 1), // Parent 1: extends up-left, has 1 child
-            // Child segments (connect to parent nodes)
-            new SegmentGene(0, 45f, 1.5f, 90f, 0.15f, 0), // Child of Parent 0: extends up-right
-            new SegmentGene(0, 90f, 4f, -60f, 0.5f, 0), // Child of Parent 0: extends down-right
-            new SegmentGene(1, 180f, 2.5f, 120f, 0.3f, 0), // Child of Parent 1: extends left
+            new NodeGene(-1, 0f, 0f, 0f, 0f), // Root node (no movement)
+            new NodeGene(0, 0f, 3f, 45f, 0.2f), // Connect to root
+            new NodeGene(0, 120f, 3.5f, -45f, 0.6f), // Also connect to root
+            new NodeGene(1, 45f, 4f, -60f, 0.5f), // Connect to node 1
+            new NodeGene(2, 180f, 2.5f, 120f, 0.3f), // Connect to node 2
         };
 
         private GameObject currentCreature;
@@ -30,33 +28,23 @@ namespace EvolutionSimulator.Creature
         void Start()
         {
             if (spawnOnStart)
-            {
                 SpawnTestCreature();
-            }
         }
 
         void Update()
         {
-            // Check if keyboard exists
             if (Keyboard.current == null)
                 return;
 
-            // Press Space to spawn new creature
             if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            {
                 SpawnTestCreature();
-            }
 
-            // Press C to clear current creature
             if (Keyboard.current.cKey.wasPressedThisFrame)
-            {
                 ClearCreature();
-            }
 
-            // Press R to randomize genes and spawn
             if (Keyboard.current.rKey.wasPressedThisFrame)
             {
-                RandomizeGenes();
+                RandomizeNodes();
                 SpawnTestCreature();
             }
         }
@@ -64,16 +52,10 @@ namespace EvolutionSimulator.Creature
         [ContextMenu("Spawn Test Creature")]
         public void SpawnTestCreature()
         {
-            // Clear existing creature
             ClearCreature();
-
-            // Create genome from test genes
-            CreatureGenome genome = new CreatureGenome(testGenes);
-
-            // Build the creature
+            CreatureGenome genome = new CreatureGenome(testNodes);
             currentCreature = CreatureBuilder.BuildCreature(genome, spawnPosition);
-
-            Debug.Log($"Spawned creature with {genome.TotalActiveSegments} active segments");
+            Debug.Log($"Spawned creature with {genome.NodeCount} nodes");
         }
 
         [ContextMenu("Clear Creature")]
@@ -86,50 +68,21 @@ namespace EvolutionSimulator.Creature
             }
         }
 
-        [ContextMenu("Randomize Genes")]
-        public void RandomizeGenes()
+        [ContextMenu("Randomize Nodes")]
+        public void RandomizeNodes()
         {
-            // Create 1-3 random parents
-            int parentCount = Random.Range(1, 4);
-            int totalChildren = Random.Range(1, 6);
-
-            testGenes = new SegmentGene[parentCount + totalChildren];
-
-            // Create parents
-            for (int i = 0; i < parentCount; i++)
-            {
-                testGenes[i] = new SegmentGene(
-                    -1, // parentIndex
-                    Random.Range(0f, 360f), // baseAngle
-                    Random.Range(0.5f, 8f), // oscSpeed
-                    Random.Range(-180f, 180f), // maxAngle
-                    Random.Range(0.01f, 0.99f), // forwardRatio
-                    totalChildren / parentCount // childCount (roughly even distribution)
-                );
-            }
-
-            // Create children
-            for (int i = 0; i < totalChildren; i++)
-            {
-                testGenes[parentCount + i] = new SegmentGene(
-                    Random.Range(0, parentCount), // parentIndex (random parent)
-                    Random.Range(0f, 360f), // baseAngle
-                    Random.Range(0.5f, 8f), // oscSpeed
-                    Random.Range(-180f, 180f), // maxAngle
-                    Random.Range(0.01f, 0.99f), // forwardRatio
-                    0 // childCount (children have no children)
-                );
-            }
+            testNodes = RandomGeneGenerator.GenerateRandomGenome().nodes;
         }
 
         void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(10, 10, 300, 200));
-            GUILayout.Label("Creature Test Controls:");
+            GUILayout.BeginArea(new Rect(10, 10, 300, 150));
+            GUILayout.Label("Sequential Creature Test:");
             GUILayout.Label("SPACE - Spawn creature");
             GUILayout.Label("C - Clear creature");
             GUILayout.Label("R - Randomize & spawn");
-            GUILayout.Label($"Current creature: {(currentCreature ? "Active" : "None")}");
+            GUILayout.Label($"Current: {(currentCreature ? "Active" : "None")}");
+            GUILayout.Label($"Nodes: {testNodes.Length}");
             GUILayout.EndArea();
         }
     }

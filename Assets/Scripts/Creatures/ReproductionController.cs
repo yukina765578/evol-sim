@@ -34,7 +34,7 @@ namespace EvolutionSimulator.Creature
 
         void OnReproductionStateChanged(bool isReady)
         {
-            // Could add visual/audio feedback here
+            // Visual/audio feedback here
         }
 
         public void OnNodeCollision(GameObject partner)
@@ -52,57 +52,52 @@ namespace EvolutionSimulator.Creature
 
         void TryReproduce(GameObject partner)
         {
-            // Check population limit
-            if (populationManager.ActiveCreatureCount >= populationManager.MaxPopulationSize)
-                return;
+            if (populationManager.ActiveCreatureCount >= populationManager.MaxPopulationSize - 1)
+                return; // Need space for 2 offspring
 
-            // Get genomes from both parents
             CreatureGenome parentGenome1 = ExtractGenomeFromCreature(gameObject);
             CreatureGenome parentGenome2 = ExtractGenomeFromCreature(partner);
 
             if (parentGenome1 == null || parentGenome2 == null)
                 return;
 
-            // Create offspring genome through crossover
-            CreatureGenome offspringGenome = GeneticCrossover.CrossoverGenomes(
+            var (offspring1Genome, offspring2Genome) = GeneticCrossover.CrossoverGenomes(
                 parentGenome1,
                 parentGenome2
             );
 
-            // Apply mutation
-            GeneticCrossover.MutateGenome(offspringGenome);
+            Vector3 partnerPos = partner.transform.position;
+            Vector3 spawn1 = GetOffspringSpawnPosition(partnerPos, 0f);
+            Vector3 spawn2 = GetOffspringSpawnPosition(partnerPos, 180f);
 
-            // Spawn offspring
-            Vector3 spawnPosition = GetOffspringSpawnPosition(partner.transform.position);
-            GameObject offspring = CreatureBuilder.BuildCreature(offspringGenome, spawnPosition);
+            GameObject offspring1 = CreatureBuilder.BuildCreature(offspring1Genome, spawn1);
+            GameObject offspring2 = CreatureBuilder.BuildCreature(offspring2Genome, spawn2);
 
-            if (offspring != null)
+            if (offspring1 != null && offspring2 != null)
             {
-                // Register offspring with population manager
-                populationManager.RegisterExistingCreature(offspring);
+                populationManager.RegisterExistingCreature(offspring1);
+                populationManager.RegisterExistingCreature(offspring2);
 
-                // Consume energy from both parents
                 creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
                 partner.GetComponent<CreatureEnergy>().ConsumeEnergy(reproductionEnergyCost);
 
-                Debug.Log($"Reproduction: {name} + {partner.name} = {offspring.name}");
+                Debug.Log(
+                    $"Reproduction: {name} + {partner.name} = {offspring1.name} + {offspring2.name}"
+                );
             }
         }
 
-        Vector3 GetOffspringSpawnPosition(Vector3 partnerPosition)
+        Vector3 GetOffspringSpawnPosition(Vector3 partnerPosition, float angleOffset)
         {
             Vector3 midpoint = (transform.position + partnerPosition) / 2f;
-            Vector2 randomOffset = Random.insideUnitCircle * offspringSpawnDistance;
-            return midpoint + new Vector3(randomOffset.x, randomOffset.y, 0);
+            float angle = (angleOffset + Random.Range(-30f, 30f)) * Mathf.Deg2Rad;
+            Vector3 offset =
+                new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * offspringSpawnDistance;
+            return midpoint + offset;
         }
 
         CreatureGenome ExtractGenomeFromCreature(GameObject creature)
         {
-            // Extract genome from existing creature structure
-            var segments = creature.GetComponentsInChildren<Segment>();
-            if (segments.Length == 0)
-                return null;
-
             // For now, generate random genome (will be replaced with actual extraction)
             return RandomGeneGenerator.GenerateRandomGenome();
         }

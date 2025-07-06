@@ -3,75 +3,108 @@ using UnityEngine;
 namespace EvolutionSimulator.Creature
 {
     [System.Serializable]
-    public struct SegmentGene
+    public struct NodeGene
     {
-        public int parentIndex; // -1 for parents, 0-n for children
+        public int parentIndex; // -1 for root, 0-(n-1) for sequential connections
         public float baseAngle; // 0-360 degrees
         public float oscSpeed; // 0.5-8.0 oscillation speed
         public float maxAngle; // -180 to 180 degrees
         public float forwardRatio; // 0.01-0.99 forward ratio
-        public int childCount; // 0 for children, n for parents
 
-        public SegmentGene(
-            int parent,
-            float angle,
-            float speed,
-            float max,
-            float ratio,
-            int children
-        )
+        public NodeGene(int parent, float angle, float speed, float max, float ratio)
         {
             parentIndex = parent;
-            baseAngle = Mathf.Clamp(angle, 0f, 360f);
-            oscSpeed = Mathf.Clamp(speed, 0.5f, 8f);
-            maxAngle = Mathf.Clamp(max, -180f, 180f);
-            forwardRatio = Mathf.Clamp(ratio, 0.01f, 0.99f);
-            childCount = Mathf.Max(0, children);
+
+            if (parent == -1) // Root node - no movement
+            {
+                baseAngle = 0f;
+                oscSpeed = 0f;
+                maxAngle = 0f;
+                forwardRatio = 0f;
+            }
+            else // Regular node - clamp values
+            {
+                baseAngle = Mathf.Clamp(angle, 0f, 360f);
+                oscSpeed = Mathf.Clamp(speed, 0.5f, 8f);
+                maxAngle = Mathf.Clamp(max, -180f, 180f);
+                forwardRatio = Mathf.Clamp(ratio, 0.01f, 0.99f);
+            }
         }
 
-        public bool IsParent => parentIndex == -1;
+        public bool IsRoot => parentIndex == -1;
         public bool IsValid => parentIndex >= -1;
-        public bool IsPadded => parentIndex == -1 && baseAngle == 0 && oscSpeed == 0.5f;
+
+        // Validate sequential connection rule
+        public bool IsValidAtPosition(int position)
+        {
+            if (IsRoot)
+                return position == 0;
+            return parentIndex >= 0 && parentIndex < position;
+        }
     }
 
     [System.Serializable]
     public class CreatureGenome
     {
-        public SegmentGene[] genes;
+        public NodeGene[] nodes;
 
-        public CreatureGenome(SegmentGene[] allGenes)
+        public CreatureGenome(NodeGene[] nodeArray)
         {
-            genes = allGenes ?? new SegmentGene[0];
+            nodes = nodeArray ?? new NodeGene[1] { new NodeGene(-1, 0, 2f, 45f, 0.2f) };
+            ValidateGenome();
         }
 
-        public SegmentGene[] GetParentGenes()
+        public int NodeCount => nodes.Length;
+        public NodeGene RootNode =>
+            nodes.Length > 0 ? nodes[0] : new NodeGene(-1, 0, 2f, 45f, 0.2f);
+
+        void ValidateGenome()
         {
-            var parents = new System.Collections.Generic.List<SegmentGene>();
-            foreach (var gene in genes)
-                if (gene.IsParent && !gene.IsPadded)
-                    parents.Add(gene);
-            return parents.ToArray();
+            // Ensure root node at position 0
+            if (nodes.Length > 0 && !nodes[0].IsRoot)
+            {
+                nodes[0] = new NodeGene(
+                    -1,
+                    nodes[0].baseAngle,
+                    nodes[0].oscSpeed,
+                    nodes[0].maxAngle,
+                    nodes[0].forwardRatio
+                );
+            }
+
+            // Validate sequential connections
+            for (int i = 1; i < nodes.Length; i++)
+            {
+                if (!nodes[i].IsValidAtPosition(i))
+                {
+                    // Fix invalid connection by connecting to previous node
+                    nodes[i] = new NodeGene(
+                        i - 1,
+                        nodes[i].baseAngle,
+                        nodes[i].oscSpeed,
+                        nodes[i].maxAngle,
+                        nodes[i].forwardRatio
+                    );
+                }
+            }
         }
 
-        public SegmentGene[] GetChildGenes()
+        public NodeGene[] GetChildrenOf(int parentIndex)
         {
-            var children = new System.Collections.Generic.List<SegmentGene>();
-            foreach (var gene in genes)
-                if (!gene.IsParent && !gene.IsPadded)
-                    children.Add(gene);
+            var children = new System.Collections.Generic.List<NodeGene>();
+            for (int i = 0; i < nodes.Length; i++)
+            {
+                if (nodes[i].parentIndex == parentIndex)
+                    children.Add(nodes[i]);
+            }
             return children.ToArray();
         }
 
-        public int TotalActiveSegments
+        public CreatureGenome Clone()
         {
-            get
-            {
-                int count = 0;
-                foreach (var gene in genes)
-                    if (!gene.IsPadded)
-                        count++;
-                return count;
-            }
+            var clonedNodes = new NodeGene[nodes.Length];
+            System.Array.Copy(nodes, clonedNodes, nodes.Length);
+            return new CreatureGenome(clonedNodes);
         }
     }
 }
