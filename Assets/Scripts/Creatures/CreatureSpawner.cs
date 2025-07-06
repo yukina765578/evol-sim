@@ -17,6 +17,10 @@ namespace EvolutionSimulator.Creature
         [Range(0.1f, 1f)]
         private float spawnAreaRatio = 0.5f;
 
+        [Header("Brain Settings")]
+        [SerializeField]
+        private bool enableBrains = true;
+
         private Boundaries boundaries;
         private List<Vector3> spawnedPositions = new List<Vector3>();
 
@@ -42,8 +46,18 @@ namespace EvolutionSimulator.Creature
                 return null;
             }
 
-            CreatureGenome genome = RandomGeneGenerator.GenerateRandomGenome();
-            GameObject creature = CreatureBuilder.BuildCreature(genome, spawnPosition);
+            GameObject creature;
+
+            if (enableBrains)
+            {
+                var (bodyGenome, brainGenome) = RandomGeneGenerator.GenerateRandomGenomeWithBrain();
+                creature = CreatureBuilder.BuildCreature(bodyGenome, brainGenome, spawnPosition);
+            }
+            else
+            {
+                CreatureGenome bodyGenome = RandomGeneGenerator.GenerateRandomGenome();
+                creature = CreatureBuilder.BuildCreature(bodyGenome, spawnPosition);
+            }
 
             if (creature != null)
             {
@@ -56,10 +70,34 @@ namespace EvolutionSimulator.Creature
             return creature;
         }
 
-        // Overload for backward compatibility
-        public GameObject SpawnCreature()
+        public GameObject SpawnCreatureWithGenomes(
+            CreatureGenome bodyGenome,
+            NEATGenome brainGenome,
+            string creatureName = null
+        )
         {
-            return SpawnCreature(null);
+            Vector3 spawnPosition = GetValidSpawnPosition();
+            if (spawnPosition == Vector3.zero)
+            {
+                Debug.LogWarning("Failed to find valid spawn position");
+                return null;
+            }
+
+            GameObject creature = CreatureBuilder.BuildCreature(
+                bodyGenome,
+                brainGenome,
+                spawnPosition
+            );
+
+            if (creature != null)
+            {
+                if (!string.IsNullOrEmpty(creatureName))
+                    creature.name = creatureName;
+
+                spawnedPositions.Add(spawnPosition);
+            }
+
+            return creature;
         }
 
         Vector3 GetValidSpawnPosition()

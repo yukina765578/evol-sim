@@ -55,23 +55,40 @@ namespace EvolutionSimulator.Creature
             if (populationManager.ActiveCreatureCount >= populationManager.MaxPopulationSize - 1)
                 return; // Need space for 2 offspring
 
-            CreatureGenome parentGenome1 = ExtractGenomeFromCreature(gameObject);
-            CreatureGenome parentGenome2 = ExtractGenomeFromCreature(partner);
+            var (parentGenome1, parentBrain1) = ExtractGenomesFromCreature(gameObject);
+            var (parentGenome2, parentBrain2) = ExtractGenomesFromCreature(partner);
 
             if (parentGenome1 == null || parentGenome2 == null)
                 return;
 
-            var (offspring1Genome, offspring2Genome) = GeneticCrossover.CrossoverGenomes(
+            var (
+                offspring1Body,
+                offspring2Body,
+                offspring1Brain,
+                offspring2Brain,
+                offspring1Length,
+                offspring2Length
+            ) = GeneticCrossover.CrossoverGenomes(
                 parentGenome1,
-                parentGenome2
+                parentBrain1,
+                parentGenome2,
+                parentBrain2
             );
 
             Vector3 partnerPos = partner.transform.position;
             Vector3 spawn1 = GetOffspringSpawnPosition(partnerPos, 0f);
             Vector3 spawn2 = GetOffspringSpawnPosition(partnerPos, 180f);
 
-            GameObject offspring1 = CreatureBuilder.BuildCreature(offspring1Genome, spawn1);
-            GameObject offspring2 = CreatureBuilder.BuildCreature(offspring2Genome, spawn2);
+            GameObject offspring1 = CreatureBuilder.BuildCreature(
+                offspring1Body,
+                offspring1Brain,
+                spawn1
+            );
+            GameObject offspring2 = CreatureBuilder.BuildCreature(
+                offspring2Body,
+                offspring2Brain,
+                spawn2
+            );
 
             if (offspring1 != null && offspring2 != null)
             {
@@ -82,7 +99,8 @@ namespace EvolutionSimulator.Creature
                 partner.GetComponent<CreatureEnergy>().ConsumeEnergy(reproductionEnergyCost);
 
                 Debug.Log(
-                    $"Reproduction: {name} + {partner.name} = {offspring1.name} + {offspring2.name}"
+                    $"Reproduction: {name} + {partner.name} = {offspring1.name} + {offspring2.name} "
+                        + $"(Lengths: {offspring1Length}, {offspring2Length})"
                 );
             }
         }
@@ -96,10 +114,41 @@ namespace EvolutionSimulator.Creature
             return midpoint + offset;
         }
 
-        CreatureGenome ExtractGenomeFromCreature(GameObject creature)
+        (CreatureGenome, NEATGenome) ExtractGenomesFromCreature(GameObject creature)
         {
-            // For now, generate random genome (will be replaced with actual extraction)
-            return RandomGeneGenerator.GenerateRandomGenome();
+            // Extract body genome (for now, generate random - will be replaced with actual extraction)
+            CreatureGenome bodyGenome = RandomGeneGenerator.GenerateRandomGenome();
+
+            // Extract brain genome
+            CreatureBrain brain = creature.GetComponent<CreatureBrain>();
+            NEATGenome brainGenome = null;
+
+            if (brain != null)
+            {
+                // Get brain genome from existing brain component
+                // For now, create basic brain matching creature's segment count
+                int segmentCount = creature.GetComponentsInChildren<Segment>().Length;
+                brainGenome = CreateBasicBrain(segmentCount);
+            }
+
+            return (bodyGenome, brainGenome);
+        }
+
+        NEATGenome CreateBasicBrain(int outputCount)
+        {
+            // Create basic brain with 2 inputs (food distance, energy) and outputs for each segment
+            NEATGenome brain = new NEATGenome(2, outputCount);
+
+            // Add some basic connections (input to output)
+            for (int i = 0; i < outputCount; i++)
+            {
+                // Connect input 0 (food) to output i
+                brain.AddConnection(new ConnectionGene(0, 2 + i, Random.Range(-1f, 1f), i * 2));
+                // Connect input 1 (energy) to output i
+                brain.AddConnection(new ConnectionGene(1, 2 + i, Random.Range(-1f, 1f), i * 2 + 1));
+            }
+
+            return brain;
         }
 
         void OnDestroy()

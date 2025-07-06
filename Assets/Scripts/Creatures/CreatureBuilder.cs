@@ -11,7 +11,18 @@ namespace EvolutionSimulator.Creature
         private static readonly Color NODE_COLOR = Color.blue;
         private static readonly Color SEGMENT_COLOR = Color.white;
 
+        // Original method for backward compatibility
         public static GameObject BuildCreature(CreatureGenome genome, Vector3 position)
+        {
+            return BuildCreature(genome, null, position);
+        }
+
+        // New method with brain support
+        public static GameObject BuildCreature(
+            CreatureGenome genome,
+            NEATGenome brainGenome,
+            Vector3 position
+        )
         {
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
@@ -39,6 +50,14 @@ namespace EvolutionSimulator.Creature
                 nodes[0].gameObject.AddComponent<FoodDetector>();
 
             var controller = creatureObj.AddComponent<CreatureController>();
+
+            // Add brain if genome provided
+            if (brainGenome != null)
+            {
+                var brain = creatureObj.AddComponent<CreatureBrain>();
+                brain.Initialize(brainGenome);
+            }
+
             energy.OnDeath.AddListener(() => OnCreatureDeath(creatureObj));
 
             return creatureObj;
@@ -115,9 +134,7 @@ namespace EvolutionSimulator.Creature
                 SEGMENT_LENGTH,
                 SEGMENT_WIDTH,
                 SEGMENT_COLOR,
-                gene.oscSpeed,
                 gene.maxAngle,
-                gene.forwardRatio,
                 gene.baseAngle,
                 parentNode,
                 childNode

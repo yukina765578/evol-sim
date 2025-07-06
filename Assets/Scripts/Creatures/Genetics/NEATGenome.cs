@@ -19,16 +19,16 @@ namespace EvolutionSimulator.Creature
         public NodeType type;
         public float bias;
 
-        public NodeGeneNEAT(int id, NodeType type, float bias = 0f)
+        public NodeGeneNEAT(int nodeId, NodeType nodeType, float nodeBias = 0f)
         {
-            id = nodeId;
-            type = nodeType;
-            bias = nodeBias;
+            this.id = nodeId;
+            this.type = nodeType;
+            this.bias = nodeBias;
         }
     }
 
     [System.Serializable]
-    public struct ConenctionGene
+    public struct ConnectionGene
     {
         public int inputId;
         public int outputId;
@@ -38,11 +38,11 @@ namespace EvolutionSimulator.Creature
 
         public ConnectionGene(int input, int output, float w, int innov, bool isEnabled = true)
         {
-            inpoutId = input;
-            outputId = output;
-            weight = w;
-            innovation = innov;
-            enabled = isEnabled;
+            this.inputId = input;
+            this.outputId = output;
+            this.weight = w;
+            this.innovation = innov;
+            this.enabled = isEnabled;
         }
     }
 
@@ -54,6 +54,11 @@ namespace EvolutionSimulator.Creature
 
         public int NodeCount => nodes.Count;
         public int ConnectionCount => connections.Count;
+
+        public NEATGenome()
+        {
+            // Empty constructor for crossover
+        }
 
         public NEATGenome(int inputs, int outputs)
         {
@@ -75,7 +80,7 @@ namespace EvolutionSimulator.Creature
             connections.Add(connection);
         }
 
-        public NodeGeneNEAT[] GetInputNode(int index)
+        public NodeGeneNEAT[] GetInputNodes()
         {
             return nodes.Where(n => n.type == NodeType.Input).ToArray();
         }
@@ -92,7 +97,7 @@ namespace EvolutionSimulator.Creature
 
         public NEATGenome Clone()
         {
-            NEATGenome clone = new NEATGenome(0, 0);
+            NEATGenome clone = new NEATGenome();
             clone.nodes = new List<NodeGeneNEAT>(nodes);
             clone.connections = new List<ConnectionGene>(connections);
             return clone;

@@ -88,9 +88,9 @@ namespace EvolutionSimulator.Creature
             {
                 if (nodeValues.ContainsKey(outputNodes[i].id))
                 {
-                    float output = nodeValues[outputNodes[i].id];
-                    float angle = (output - 0.5f) * 180f; // Map to -90 to 90 degrees
-                    segments[i].SetDirectAngle(angle);
+                    float output = nodeValues[outputNodes[i].id]; // 0 to 1 from sigmoid
+                    float coefficient = (output - 0.5f) * 2f; // Map to -1 to 1
+                    segments[i].SetTargetAngle(coefficient);
                 }
             }
         }

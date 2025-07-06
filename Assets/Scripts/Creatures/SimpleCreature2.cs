@@ -181,9 +181,7 @@ namespace EvolutionSimulator.Creature
                 segmentLength,
                 segmentWidth,
                 segmentColor,
-                speed,
                 angle,
-                forwardRatio,
                 baseAngle,
                 parent,
                 child

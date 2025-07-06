@@ -13,12 +13,14 @@ namespace EvolutionSimulator.Creature
         private Node parentNode;
         private Node childNode;
 
-        private float oscillationSpeed = 2f;
         private float maxAngle = 30f;
         private float prevAngle = 0f;
         private float currentAngle = 0f;
-        private float forwardRatio = 0.2f;
         private float baseAngle = 0f;
+
+        // Brain control fields
+        private float targetAngle = 0f;
+        private bool brainControlled = false;
 
         private bool debugMode = false;
         private CreatureEnergy creatureEnergy;
@@ -38,9 +40,7 @@ namespace EvolutionSimulator.Creature
             float segmentLength,
             float segmentWidth,
             Color color,
-            float segmentOscillationSpeed,
             float segmentMaxAngle,
-            float segmentForwardRatio,
             float segmentBaseAngle,
             Node parent,
             Node child
@@ -49,15 +49,19 @@ namespace EvolutionSimulator.Creature
             length = segmentLength;
             width = segmentWidth;
             segmentColor = color;
-            oscillationSpeed = segmentOscillationSpeed;
             maxAngle = segmentMaxAngle;
-            forwardRatio = segmentForwardRatio;
             baseAngle = segmentBaseAngle;
 
             parentNode = parent;
             childNode = child;
 
             UpdateVisuals();
+        }
+
+        public void SetTargetAngle(float coefficient)
+        {
+            targetAngle = Mathf.Clamp(coefficient * maxAngle, -maxAngle, maxAngle);
+            brainControlled = true;
         }
 
         void SetupLineRenderer()
@@ -125,25 +129,22 @@ namespace EvolutionSimulator.Creature
                 return;
 
             prevAngle = currentAngle;
-            float cycleTime = (Time.time / oscillationSpeed + phaseOffset) % oscillationSpeed;
-            float modifiedT;
-            if (cycleTime < oscillationSpeed * forwardRatio)
+
+            if (brainControlled)
             {
-                modifiedT = (cycleTime / (oscillationSpeed * forwardRatio)) * Mathf.PI;
+                currentAngle = targetAngle;
             }
             else
             {
-                float remainingTime = cycleTime - (oscillationSpeed * forwardRatio);
-                float slowDuration = oscillationSpeed * (1f - forwardRatio);
-                modifiedT = Mathf.PI + (remainingTime / slowDuration) * Mathf.PI;
+                // Default to neutral position if no brain control
+                currentAngle = 0f;
             }
-            currentAngle = ((Mathf.Sin(modifiedT - Mathf.PI / 2) + 1f) / 2f) * maxAngle;
 
             // Calculate energy cost for movement
-            if (creatureEnergy != null && creatureEnergy.IsAlive) // Only check age-based death
+            if (creatureEnergy != null && creatureEnergy.IsAlive)
             {
                 float angleChange = Mathf.Abs(currentAngle - prevAngle) / Time.deltaTime;
-                if (angleChange > 0.001f) // Avoid tiny floating point values
+                if (angleChange > 0.001f)
                 {
                     creatureEnergy.ConsumeMovementEnergy(angleChange);
                 }
@@ -201,6 +202,11 @@ namespace EvolutionSimulator.Creature
         public float GetCurrentAngle()
         {
             return currentAngle;
+        }
+
+        public float GetMaxAngle()
+        {
+            return maxAngle;
         }
 
         void OnValidate()

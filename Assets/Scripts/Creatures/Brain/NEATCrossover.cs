@@ -14,8 +14,16 @@ namespace EvolutionSimulator.Creature
             NEATGenome parent2
         )
         {
-            NEATGenome offspring1 = new NEATGenome();
-            NEATGenome offspring2 = new NEATGenome();
+            // Create offspring with same input/output structure as parents
+            int inputCount = parent1.GetInputNodes().Length;
+            int outputCount = parent1.GetOutputNodes().Length;
+
+            NEATGenome offspring1 = new NEATGenome(inputCount, outputCount);
+            NEATGenome offspring2 = new NEATGenome(inputCount, outputCount);
+
+            // Clear default nodes to rebuild from crossover
+            offspring1.nodes.Clear();
+            offspring2.nodes.Clear();
 
             // Collect all unique node IDs
             HashSet<int> allNodeIds = parent1
