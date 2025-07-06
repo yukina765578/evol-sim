@@ -78,10 +78,73 @@ namespace EvolutionSimulator.Creature
 
         public static void MutateGenome(CreatureGenome genome)
         {
+            StructuralMutations(genome);
+
             for (int i = 0; i < genome.nodes.Length; i++)
             {
                 genome.nodes[i] = MutateNode(genome.nodes[i]);
             }
+        }
+
+        static void StructuralMutations(CreatureGenome genome)
+        {
+            if (genome.NodeCount < MAX_NODES && Random.value < 0.01f)
+                AddRandomNode(genome);
+            if (genome.NodeCount > 2 && Random.value < 0.01f)
+                RemoveRandomNode(genome);
+        }
+
+        static void AddRandomNode(CreatureGenome genome)
+        {
+            int parentIndex = Random.Range(0, genome.NodeCount);
+            NodeGene newNode = new NodeGene(
+                parentIndex,
+                Random.Range(0f, 360f), // baseAngle
+                Random.Range(0.5f, 8f), // oscSpeed
+                Random.Range(-180f, 180f), // maxAngle
+                Random.Range(0.01f, 0.5f) // forwardRatio
+            );
+            NodeGene[] newNodes = new NodeGene[genome.NodeCount + 1];
+            System.Array.Copy(genome.nodes, newNodes, genome.NodeCount);
+            newNodes[genome.NodeCount] = newNode;
+            genome.nodes = newNodes;
+        }
+
+        static void RemoveRandomNode(CreatureGenome genome)
+        {
+            int removeIndex = Random.Range(1, genome.NodeCount - 1);
+            int parentOfRemovedNode = genome.nodes[removeIndex].parentIndex;
+
+            for (int i = 0; i < genome.nodes.Length; i++)
+            {
+                if (genome.nodes[i].parentIndex == removeIndex)
+                {
+                    var node = genome.nodes[i];
+                    node.parentIndex = parentOfRemovedNode;
+                    genome.nodes[i] = node;
+                }
+            }
+
+            for (int i = 0; i < genome.nodes.Length; i++)
+            {
+                if (genome.nodes[i].parentIndex > removeIndex)
+                {
+                    var node = genome.nodes[i];
+                    node.parentIndex--;
+                    genome.nodes[i] = node;
+                }
+            }
+
+            NodeGene[] newNodes = new NodeGene[genome.NodeCount - 1];
+            System.Array.Copy(genome.nodes, 0, newNodes, 0, removeIndex);
+            System.Array.Copy(
+                genome.nodes,
+                removeIndex + 1,
+                newNodes,
+                removeIndex,
+                genome.NodeCount - removeIndex - 1
+            );
+            genome.nodes = newNodes;
         }
 
         static NodeGene MutateNode(NodeGene node)
