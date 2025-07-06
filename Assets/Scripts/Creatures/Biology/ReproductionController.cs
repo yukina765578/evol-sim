@@ -1,3 +1,4 @@
+using EvolutionSimulator.Creature;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creature
@@ -136,16 +137,28 @@ namespace EvolutionSimulator.Creature
 
         NEATGenome CreateBasicBrain(int outputCount)
         {
-            // Create basic brain with 2 inputs (food distance, energy) and outputs for each segment
-            NEATGenome brain = new NEATGenome(2, outputCount);
+            NEATGenome brain = new NEATGenome(12, outputCount);
 
-            // Add some basic connections (input to output)
             for (int i = 0; i < outputCount; i++)
             {
-                // Connect input 0 (food) to output i
-                brain.AddConnection(new ConnectionGene(0, 2 + i, Random.Range(-1f, 1f), i * 2));
-                // Connect input 1 (energy) to output i
-                brain.AddConnection(new ConnectionGene(1, 2 + i, Random.Range(-1f, 1f), i * 2 + 1));
+                for (int inputIdx = 0; inputIdx < Mathf.Min(4, 12); inputIdx++)
+                {
+                    if (Random.value < 0.7f) // 70% connection chance
+                    {
+                        int innovation = InnovationManager.Instance.GetConnectionInnovation(
+                            inputIdx,
+                            12 + i
+                        );
+                        brain.AddConnection(
+                            new ConnectionGene(
+                                inputIdx,
+                                12 + i, // Output nodes start at ID 12
+                                Random.Range(-1f, 1f),
+                                innovation
+                            )
+                        );
+                    }
+                }
             }
 
             return brain;

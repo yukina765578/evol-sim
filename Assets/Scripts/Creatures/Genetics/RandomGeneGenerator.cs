@@ -1,3 +1,4 @@
+using EvolutionSimulator.Creature;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creature
@@ -40,11 +41,13 @@ namespace EvolutionSimulator.Creature
             return new CreatureGenome(nodes);
         }
 
+        // Update the GenerateRandomBrain method in RandomGeneGenerator.cs
+
         public static NEATGenome GenerateRandomBrain(int outputCount)
         {
             NEATGenome brain = new NEATGenome(BRAIN_INPUTS, outputCount);
 
-            // Connect inputs to outputs
+            // Connect inputs to outputs using InnovationManager
             for (int output = 0; output < outputCount; output++)
             {
                 int outputNodeId = BRAIN_INPUTS + output;
@@ -53,23 +56,27 @@ namespace EvolutionSimulator.Creature
                 {
                     if (Random.value < 0.7f) // 70% connection chance
                     {
+                        int innovation = InnovationManager.Instance.GetConnectionInnovation(
+                            input,
+                            outputNodeId
+                        );
                         brain.AddConnection(
                             new ConnectionGene(
                                 input,
                                 outputNodeId,
                                 Random.Range(-2f, 2f),
-                                input * outputCount + output
+                                innovation
                             )
                         );
                     }
                 }
             }
 
-            // Add hidden nodes
+            // Add hidden nodes using InnovationManager
             int hiddenCount = Random.Range(0, 3);
             for (int h = 0; h < hiddenCount; h++)
             {
-                int hiddenId = BRAIN_INPUTS + outputCount + h;
+                int hiddenId = InnovationManager.Instance.GetNextNodeId();
                 brain.AddNode(new NodeGeneNEAT(hiddenId, NodeType.Hidden, Random.Range(-1f, 1f)));
 
                 // Input to hidden connections
@@ -77,13 +84,12 @@ namespace EvolutionSimulator.Creature
                 {
                     if (Random.value < 0.5f)
                     {
+                        int innovation = InnovationManager.Instance.GetConnectionInnovation(
+                            input,
+                            hiddenId
+                        );
                         brain.AddConnection(
-                            new ConnectionGene(
-                                input,
-                                hiddenId,
-                                Random.Range(-2f, 2f),
-                                1000 + h * BRAIN_INPUTS + input
-                            )
+                            new ConnectionGene(input, hiddenId, Random.Range(-2f, 2f), innovation)
                         );
                     }
                 }
@@ -93,12 +99,17 @@ namespace EvolutionSimulator.Creature
                 {
                     if (Random.value < 0.5f)
                     {
+                        int outputNodeId = BRAIN_INPUTS + output;
+                        int innovation = InnovationManager.Instance.GetConnectionInnovation(
+                            hiddenId,
+                            outputNodeId
+                        );
                         brain.AddConnection(
                             new ConnectionGene(
                                 hiddenId,
-                                BRAIN_INPUTS + output,
+                                outputNodeId,
                                 Random.Range(-2f, 2f),
-                                2000 + h * outputCount + output
+                                innovation
                             )
                         );
                     }

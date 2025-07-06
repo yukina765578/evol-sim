@@ -25,7 +25,8 @@ namespace EvolutionSimulator.Creature
             return (offspring1, offspring2);
         }
 
-        // New method with brain crossover
+        // In GeneticCrossover.cs - Update the CrossoverGenomes method
+
         public static (
             CreatureGenome,
             CreatureGenome,
@@ -53,11 +54,16 @@ namespace EvolutionSimulator.Creature
             // Crossover brains if both parents have them
             if (parent1Brain != null && parent2Brain != null)
             {
-                var (brain1, brain2) = NEATCrossover.CrossoverGenomes(parent1Brain, parent2Brain);
+                // ✅ NEW: Pass output counts to NEATCrossover
+                var (brain1, brain2) = NEATCrossover.CrossoverGenomes(
+                    parent1Brain,
+                    parent2Brain,
+                    offspring1Length, // Output count for offspring 1
+                    offspring2Length // Output count for offspring 2
+                );
 
-                // Adjust output nodes to match offspring segment counts
-                offspring1Brain = AdjustOutputNodes(brain1, offspring1Length);
-                offspring2Brain = AdjustOutputNodes(brain2, offspring2Length);
+                offspring1Brain = brain1;
+                offspring2Brain = brain2;
             }
 
             return (
