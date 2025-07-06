@@ -91,8 +91,8 @@ namespace EvolutionSimulator.Creature
 
             if (speed > 0.001f)
             {
-                float frictionCoeff = slidingFriction / (speed + 0.1f);
-                Vector2 frictionForce = -velocity * frictionCoeff;
+                float frictionCoeff = slidingFriction * Mathf.Pow(speed, 1.5f);
+                Vector2 frictionForce = -velocity.normalized * frictionCoeff;
                 creatureRigidbody.AddForce(frictionForce);
             }
         }

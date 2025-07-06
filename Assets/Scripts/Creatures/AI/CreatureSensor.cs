@@ -54,15 +54,16 @@ namespace EvolutionSimulator.Creature
                 sensorRadius,
                 foodLayerMask
             );
-
             FoodItem nearestFood = null;
             float nearestDistance = float.MaxValue;
+            int validFoodCount = 0;
 
             foreach (var collider in foodColliders)
             {
                 FoodItem food = collider.GetComponent<FoodItem>();
                 if (food != null && !food.IsConsumed)
                 {
+                    validFoodCount++;
                     float distance = Vector2.Distance(
                         transform.position,
                         collider.transform.position
@@ -74,7 +75,6 @@ namespace EvolutionSimulator.Creature
                     }
                 }
             }
-
             if (nearestFood != null)
             {
                 FoodDetected = 1f;

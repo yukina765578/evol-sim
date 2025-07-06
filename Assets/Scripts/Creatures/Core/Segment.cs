@@ -4,6 +4,10 @@ namespace EvolutionSimulator.Creature
 {
     public class Segment : MonoBehaviour
     {
+        [Header("Movement Settings")]
+        [SerializeField]
+        private float angleTransitionSpeed = 2f;
+
         private LineRenderer lineRenderer;
         private LineRenderer thrustDebugLine;
         private float length = 2f;
@@ -132,7 +136,11 @@ namespace EvolutionSimulator.Creature
 
             if (brainControlled)
             {
-                currentAngle = targetAngle;
+                currentAngle = Mathf.LerpAngle(
+                    currentAngle,
+                    targetAngle,
+                    angleTransitionSpeed * Time.deltaTime
+                );
             }
             else
             {
@@ -211,6 +219,8 @@ namespace EvolutionSimulator.Creature
 
         void OnValidate()
         {
+            angleTransitionSpeed = Mathf.Max(0.1f, angleTransitionSpeed);
+
             if (Application.isPlaying)
             {
                 UpdateVisuals();

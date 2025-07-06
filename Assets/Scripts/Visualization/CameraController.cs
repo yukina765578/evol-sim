@@ -12,7 +12,7 @@ namespace Environment.Visualization
 
         private Camera cam;
         private Vector3 dragOrigin;
-        
+
         void Start()
         {
             cam = GetComponent<Camera>();
@@ -22,21 +22,22 @@ namespace Environment.Visualization
             }
             cam.orthographicSize = 100f; // Set initial zoom level
         }
-        
+
         void Update()
         {
             HandleZoom();
             HandlePanning();
             HandleReset();
         }
-        
+
         void HandleZoom()
         {
             // Check if mouse exists
-            if (Mouse.current == null) return;
-            
+            if (Mouse.current == null)
+                return;
+
             Vector2 scroll = Mouse.current.scroll.ReadValue();
-            
+
             if (Mathf.Abs(scroll.y) > 0.1f) // Add threshold
             {
                 float zoomDirection = scroll.y > 0 ? -1 : 1; // Invert if needed
@@ -44,10 +45,11 @@ namespace Environment.Visualization
                 cam.orthographicSize = Mathf.Clamp(cam.orthographicSize, minZoom, maxZoom);
             }
         }
-        
+
         void HandlePanning()
         {
-            if (Mouse.current == null) return;
+            if (Mouse.current == null)
+                return;
             if (Mouse.current.rightButton.wasPressedThisFrame)
             {
                 Vector3 mousePosition = Mouse.current.position.ReadValue();
@@ -64,14 +66,14 @@ namespace Environment.Visualization
                 Vector3 difference = dragOrigin - currentMouseWorld;
                 transform.position += difference;
             }
-
         }
-        
+
         void HandleReset()
         {
-            if (Keyboard.current == null) return;
-            
-            if (Keyboard.current.rKey.wasPressedThisFrame)
+            if (Keyboard.current == null)
+                return;
+
+            if (Keyboard.current.pKey.wasPressedThisFrame)
             {
                 transform.position = new Vector3(0, 0, -10);
                 cam.orthographicSize = 50f;
@@ -79,4 +81,3 @@ namespace Environment.Visualization
         }
     }
 }
-

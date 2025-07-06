@@ -25,6 +25,11 @@ namespace EvolutionSimulator.Creature
             segments = GetComponentsInChildren<Segment>();
         }
 
+        void Start()
+        {
+            segments = GetComponentsInChildren<Segment>();
+        }
+
         void Update()
         {
             if (genome == null || !energy.IsAlive)
@@ -77,6 +82,15 @@ namespace EvolutionSimulator.Creature
                 nodeValues[inputNodes[7].id] = sensor.MateDistance;
                 nodeValues[inputNodes[8].id] = sensor.MateDirection;
                 nodeValues[inputNodes[9].id] = sensor.MateDetected;
+
+                // Add this at the end of SetInputs() method in CreatureBrain.cs
+
+                // DEBUG: Override with random values for testing
+                if (inputNodes.Length >= 2)
+                {
+                    nodeValues[inputNodes[0].id] = Random.Range(0f, 1f); // Random food detection
+                    nodeValues[inputNodes[1].id] = Random.Range(0f, 1f); // Random food direction
+                }
 
                 // Velocity inputs
                 Vector2 velocity = rb.linearVelocity;
