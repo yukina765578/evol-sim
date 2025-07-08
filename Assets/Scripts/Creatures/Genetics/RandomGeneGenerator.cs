@@ -74,9 +74,11 @@ namespace EvolutionSimulator.Creature
 
             // Add hidden nodes using InnovationManager
             int hiddenCount = Random.Range(0, 3);
+            Debug.Log($"Generating brain with {hiddenCount} hidden nodes");
             for (int h = 0; h < hiddenCount; h++)
             {
                 int hiddenId = InnovationManager.Instance.GetNextNodeId();
+                Debug.Log($"Creating hidden node with ID: {hiddenId}");
                 brain.AddNode(new NodeGeneNEAT(hiddenId, NodeType.Hidden, Random.Range(-1f, 1f)));
 
                 // Input to hidden connections

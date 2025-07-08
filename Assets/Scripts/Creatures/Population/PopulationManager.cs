@@ -17,6 +17,16 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private bool spawnOnStart = true;
 
+        [Header("Auto-Spawning")]
+        [SerializeField]
+        private bool enableAutoSpawn = true;
+
+        [SerializeField]
+        private float spawnInterval = 5f;
+
+        [SerializeField]
+        private int generationCounter = 0;
+
         [Header("Statistics")]
         [SerializeField]
         private int totalCreaturesSpawned = 0;
@@ -37,6 +47,7 @@ namespace EvolutionSimulator.Creature
         private CreatureSpawner creatureSpawner;
         private List<GameObject> activeCreatures = new List<GameObject>();
         private List<float> lifespanHistory = new List<float>();
+        private float spawnTimer = 0f;
 
         public int PopulationSize => initialPopulationSize;
         public int MaxPopulationSize => maxPopulationSize;
@@ -65,8 +76,34 @@ namespace EvolutionSimulator.Creature
 
         void Update()
         {
-            // Clean up destroyed creatures
             CleanupDeadCreatures();
+            HandleAutoSpawning();
+        }
+
+        void HandleAutoSpawning()
+        {
+            if (!enableAutoSpawn)
+                return;
+
+            spawnTimer += Time.deltaTime;
+
+            if (spawnTimer >= spawnInterval)
+            {
+                spawnTimer = 0f;
+
+                if (activeCreatures.Count < initialPopulationSize)
+                {
+                    string creatureName = $"Gen{generationCounter}_Auto_{totalCreaturesSpawned:D3}";
+                    SpawnSingleCreature(creatureName);
+
+                    if (showSpawnProgress)
+                    {
+                        Debug.Log(
+                            $"Auto-spawned: {creatureName} (Population: {activeCreatures.Count}/{initialPopulationSize})"
+                        );
+                    }
+                }
+            }
         }
 
         [ContextMenu("Spawn Initial Population")]
@@ -79,7 +116,7 @@ namespace EvolutionSimulator.Creature
 
             for (int i = 0; i < initialPopulationSize; i++)
             {
-                SpawnSingleCreature($"Gen0_Creature_{i:D3}");
+                SpawnSingleCreature($"Gen{generationCounter}_Creature_{i:D3}");
             }
 
             if (showSpawnProgress)
@@ -92,13 +129,14 @@ namespace EvolutionSimulator.Creature
 
         public GameObject SpawnSingleCreature(string creatureName = null)
         {
-            // Use default naming if no name provided
+            if (activeCreatures.Count >= maxPopulationSize)
+                return null;
+
             string finalName = creatureName ?? $"Creature_{totalCreaturesSpawned:D3}";
 
             GameObject creature = creatureSpawner.SpawnCreature(finalName);
             if (creature != null)
             {
-                // Subscribe to death event for automatic cleanup
                 var energy = creature.GetComponent<CreatureEnergy>();
                 if (energy != null)
                 {
@@ -117,7 +155,6 @@ namespace EvolutionSimulator.Creature
 
         void CleanupDeadCreatures()
         {
-            // Remove null references (destroyed creatures)
             activeCreatures.RemoveAll(creature => creature == null);
         }
 
@@ -125,10 +162,7 @@ namespace EvolutionSimulator.Creature
         {
             if (creature != null)
             {
-                // Remove from active list
                 activeCreatures.Remove(creature);
-
-                // Update statistics
                 totalCreatureDeaths++;
                 lifespanHistory.Add(lifespan);
                 CalculateAverageLifespan();
@@ -180,6 +214,7 @@ namespace EvolutionSimulator.Creature
             totalCreatureDeaths = 0;
             averageLifespan = 0f;
             lifespanHistory.Clear();
+            generationCounter = 0;
 
             Debug.Log("Population statistics reset");
         }
@@ -207,6 +242,7 @@ namespace EvolutionSimulator.Creature
         void OnValidate()
         {
             initialPopulationSize = Mathf.Clamp(initialPopulationSize, 1, 500);
+            spawnInterval = Mathf.Max(0.1f, spawnInterval);
         }
     }
 }

@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace EvolutionSimulator.Creature
 {
+    // LEGACY: This class is no longer used in the distance-based mating system
+    // Kept for compatibility but functionality has been moved to ReproductionController
     public class ReproductionTrigger : MonoBehaviour
     {
         [Header("Debug")]
@@ -14,63 +16,30 @@ namespace EvolutionSimulator.Creature
 
         public void Initialize(ReproductionController controller)
         {
+            // Legacy method - no longer used
+            // Distance-based mating system handles reproduction detection
+            Debug.LogWarning("ReproductionTrigger is deprecated. Remove this component.");
+
             reproductionController = controller;
-            triggerCollider = GetComponent<CircleCollider2D>();
-            CreateDebugCircle();
+
+            // Disable this component since it's no longer needed
+            enabled = false;
         }
 
         void CreateDebugCircle()
         {
-            if (!showCollisionRadius)
-                return;
-
-            GameObject debugObj = new GameObject("CollisionDebug");
-            debugObj.transform.SetParent(transform);
-            debugObj.transform.localPosition = Vector3.zero;
-
-            circleRenderer = debugObj.AddComponent<LineRenderer>();
-            circleRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            circleRenderer.startColor = Color.yellow;
-            circleRenderer.endColor = Color.yellow;
-            circleRenderer.startWidth = 0.05f;
-            circleRenderer.endWidth = 0.05f;
-            circleRenderer.useWorldSpace = false;
-            circleRenderer.sortingOrder = 5;
-
-            DrawCircle();
+            // Legacy visualization - no longer needed
         }
 
         void DrawCircle()
         {
-            if (circleRenderer == null || triggerCollider == null)
-                return;
-
-            int segments = 32;
-            circleRenderer.positionCount = segments + 1;
-            float radius = triggerCollider.radius;
-
-            for (int i = 0; i <= segments; i++)
-            {
-                float angle = i * 2f * Mathf.PI / segments;
-                Vector3 pos = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0);
-                circleRenderer.SetPosition(i, pos);
-            }
+            // Legacy visualization - no longer needed
         }
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (reproductionController == null)
-                return;
-
-            Node otherNode = other.GetComponent<Node>();
-            if (otherNode == null)
-                return;
-
-            GameObject otherCreature = otherNode.transform.root.gameObject;
-            if (otherCreature == reproductionController.gameObject)
-                return;
-
-            reproductionController.OnNodeCollision(otherCreature);
+            // Legacy collision detection - no longer used
+            // ReproductionController now uses distance-based detection
         }
 
         void OnDestroy()

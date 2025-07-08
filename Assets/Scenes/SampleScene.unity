@@ -523,7 +523,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
   m_Name: 
@@ -566,14 +566,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6f763cce941aaad49b39dd71d396109e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 225
-  maxPopulationSize: 1000
+  initialPopulationSize: 281
+  maxPopulationSize: 619
   spawnOnStart: 1
+  enableAutoSpawn: 1
+  spawnInterval: 5
+  generationCounter: 0
   totalCreaturesSpawned: 0
   totalCreatureDeaths: 0
   averageLifespan: 0
@@ -610,7 +613,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1472847869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -625,43 +628,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spawnOnStart: 1
   spawnPosition: {x: 0, y: 0, z: 0}
-  testGenes:
+  enableBrain: 1
+  testNodes:
   - parentIndex: -1
     baseAngle: 0
-    oscSpeed: 3
+    maxAngle: 0
+  - parentIndex: 0
+    baseAngle: 120
     maxAngle: 45
-    forwardRatio: 0.2
-    childCount: 2
-  - parentIndex: -1
-    baseAngle: 240
-    oscSpeed: 3.5
+  - parentIndex: 1
+    baseAngle: 90
     maxAngle: -45
-    forwardRatio: 0.6
-    childCount: 2
   - parentIndex: 0
-    baseAngle: -45
-    oscSpeed: 4
-    maxAngle: -60
-    forwardRatio: 0.5
-    childCount: 0
-  - parentIndex: 0
-    baseAngle: 15
-    oscSpeed: 2.2
-    maxAngle: 75
-    forwardRatio: 0.25
-    childCount: 0
-  - parentIndex: 1
     baseAngle: 180
-    oscSpeed: 2.5
-    maxAngle: 120
-    forwardRatio: 0.3
-    childCount: 0
+    maxAngle: 60
   - parentIndex: 1
-    baseAngle: 280
-    oscSpeed: 4.2
-    maxAngle: 30
-    forwardRatio: 0.45
-    childCount: 0
+    baseAngle: 250
+    maxAngle: -15
+  - parentIndex: 3
+    baseAngle: 150
+    maxAngle: 75
+  - parentIndex: 2
+    baseAngle: 30
+    maxAngle: -90
 --- !u!4 &1472847870
 Transform:
   m_ObjectHideFlags: 0
@@ -677,66 +666,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1598720960
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1598720962}
-  - component: {fileID: 1598720963}
-  m_Layer: 0
-  m_Name: SimpleCreature
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1598720962
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598720960}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1598720963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598720960}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a907b160cb8b2144b1cab6ad55927ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  oscillationSpeed: 2
-  maxAngle: 90
-  oscillationSpeed1: 2
-  maxAngle1: 90
-  phaseOffset: 0
-  forwardRatio: 0.05
-  segment0BaseAngle: 0
-  segment1BaseAngle: 45
-  segmentLength: 2
-  nodeSize: 1
-  nodeColor: {r: 0, g: 0, b: 1, a: 1}
-  segmentColor: {r: 1, g: 1, b: 1, a: 1}
-  segmentWidth: 0.1
-  showThrustDebug: 1
-  showVelocityDebug: 1
-  slidingFriction: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -745,5 +674,4 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 129217377}
   - {fileID: 1348387816}
-  - {fileID: 1598720962}
   - {fileID: 1472847870}

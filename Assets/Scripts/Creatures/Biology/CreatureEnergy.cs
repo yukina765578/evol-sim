@@ -28,6 +28,19 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private float maxAge = 300f;
 
+        [Header("Dynamic Aging")]
+        [SerializeField]
+        private float normalAgingRate = 1f;
+
+        [SerializeField]
+        private float lowEnergyMultiplier = 1.5f; // Below 50%
+
+        [SerializeField]
+        private float criticalEnergyMultiplier = 3f; // Below 20%
+
+        [SerializeField]
+        private float starvationMultiplier = 5f; // At 0%
+
         [Header("Reproduction")]
         [SerializeField]
         private float reproductionThreshold = 80f;
@@ -63,10 +76,30 @@ namespace EvolutionSimulator.Creature
             if (!IsAlive)
                 return;
 
-            age += Time.deltaTime;
+            ProcessAging();
             ConsumeBasalEnergy();
             CheckReproductionState();
             CheckDeath();
+        }
+
+        void ProcessAging()
+        {
+            float agingMultiplier = CalculateAgingMultiplier();
+            age += normalAgingRate * agingMultiplier * Time.deltaTime;
+        }
+
+        float CalculateAgingMultiplier()
+        {
+            float energyRatio = EnergyRatio;
+
+            if (energyRatio <= 0f)
+                return starvationMultiplier;
+            else if (energyRatio <= 0.2f)
+                return criticalEnergyMultiplier;
+            else if (energyRatio <= 0.5f)
+                return lowEnergyMultiplier;
+            else
+                return 1f; // Normal aging
         }
 
         void SetupReproductionCollider()
@@ -86,7 +119,6 @@ namespace EvolutionSimulator.Creature
                 wasReproductionReady = currentlyReady;
                 reproductionCollider.enabled = currentlyReady;
 
-                // Change node colors
                 Color targetColor = currentlyReady ? Color.red : Color.blue;
                 foreach (Node node in creatureNodes)
                 {
@@ -97,8 +129,6 @@ namespace EvolutionSimulator.Creature
                 OnReproductionReadyChanged?.Invoke(currentlyReady);
             }
         }
-
-        // Collision handling moved to ReproductionController
 
         void ConsumeBasalEnergy()
         {
@@ -145,6 +175,12 @@ namespace EvolutionSimulator.Creature
             movementConstant = Mathf.Max(0, movementConstant);
             powerExponent = Mathf.Clamp(powerExponent, 1f, 5f);
             reproductionThreshold = Mathf.Clamp(reproductionThreshold, 0, maxEnergy);
+
+            // Validate aging multipliers
+            normalAgingRate = Mathf.Max(0.1f, normalAgingRate);
+            lowEnergyMultiplier = Mathf.Max(1f, lowEnergyMultiplier);
+            criticalEnergyMultiplier = Mathf.Max(lowEnergyMultiplier, criticalEnergyMultiplier);
+            starvationMultiplier = Mathf.Max(criticalEnergyMultiplier, starvationMultiplier);
         }
     }
 }
