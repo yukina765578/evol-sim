@@ -644,7 +644,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 1000
+  initialPopulationSize: 103
   maxPopulationSize: 1000
   spawnOnStart: 1
   enableAutoSpawn: 1

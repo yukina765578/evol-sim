@@ -52,17 +52,37 @@ namespace EvolutionSimulator.Creatures.Population
             // Build creature body
             var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
 
-            if (nodes.Count > 0)
-            {
-                nodes[0].gameObject.AddComponent<FoodDetector>();
-                nodes[0].gameObject.AddComponent<CreatureDetector>();
-            }
+            SetupDetectioNode(nodes[0]);
 
             // Add controller last (after body is built)
             var controller = creatureObj.AddComponent<Controller>();
             controller.Initialize(genome);
 
             return creatureObj;
+        }
+
+        static void SetupDetectioNode(Node detectionNode)
+        {
+            GameObject nodeObj = detectionNode.gameObject;
+
+            // Add Kinematic Rigidbody2D to parent node
+            var nodeRigidbody = nodeObj.AddComponent<Rigidbody2D>();
+            nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
+            nodeRigidbody.gravityScale = 0f;
+
+            // Create separate child for food detection
+            GameObject foodDetectorObj = new GameObject("FoodDetector");
+            foodDetectorObj.transform.SetParent(nodeObj.transform);
+            foodDetectorObj.transform.localPosition = Vector3.zero;
+            foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            foodDetectorObj.AddComponent<FoodDetector>();
+
+            // Create separate child for creature detection
+            GameObject creatureDetectorObj = new GameObject("CreatureDetector");
+            creatureDetectorObj.transform.SetParent(nodeObj.transform);
+            creatureDetectorObj.transform.localPosition = Vector3.zero;
+            creatureDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            creatureDetectorObj.AddComponent<CreatureDetector>();
         }
 
         static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(

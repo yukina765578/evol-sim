@@ -160,6 +160,10 @@ namespace EvolutionSimulator.Creatures.Population
 
                 creatures.Add(creature);
                 totalCreatureSpawned++;
+
+                Debug.Log(
+                    $"Registered existing creature: {creature.name} (Total: {totalCreatureSpawned})"
+                );
             }
         }
 

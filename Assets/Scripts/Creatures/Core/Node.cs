@@ -9,9 +9,23 @@ namespace EvolutionSimulator.Creatures.Core
         private Color nodeColor = Color.blue;
         private Vector3 prevPosition;
 
+        private Energy energyComponent;
+
         void Awake()
         {
             SetupRenderer();
+        }
+
+        void Update()
+        {
+            if (energyComponent != null && energyComponent.IsReproductionReady)
+            {
+                UpdateNodeColor(Color.red);
+            }
+            else
+            {
+                UpdateNodeColor(Color.blue); // Default color
+            }
         }
 
         public void Initialize(float nodeSize, Color color)
@@ -19,6 +33,7 @@ namespace EvolutionSimulator.Creatures.Core
             size = nodeSize;
             nodeColor = color;
             prevPosition = transform.localPosition;
+            energyComponent = GetComponentInParent<Energy>();
 
             UpdateVisuals();
         }
@@ -45,6 +60,14 @@ namespace EvolutionSimulator.Creatures.Core
             {
                 spriteRenderer.color = nodeColor;
                 transform.localScale = Vector3.one * size;
+            }
+        }
+
+        void UpdateNodeColor(Color color)
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.color = color;
             }
         }
 

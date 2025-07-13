@@ -32,7 +32,6 @@ namespace EvolutionSimulator.Environment
             SetupLayer();
             SetupRigidbody();
             SetupVisuals();
-            SetupCollider();
         }
 
         void SetupLayer()
@@ -75,16 +74,6 @@ namespace EvolutionSimulator.Environment
 
             spriteRenderer.color = foodColor;
             transform.localScale = Vector3.one * foodSize;
-        }
-
-        void SetupCollider()
-        {
-            foodCollider = GetComponent<CircleCollider2D>();
-            if (foodCollider == null)
-                foodCollider = gameObject.AddComponent<CircleCollider2D>();
-
-            foodCollider.isTrigger = true;
-            foodCollider.radius = 0.5f; // Matches sprite size
         }
 
         Sprite CreateCircleSprite()

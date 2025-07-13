@@ -56,12 +56,17 @@ namespace EvolutionSimulator.Creatures.Genetics
             return offspringGenome;
         }
 
+        public static bool Testing()
+        {
+            return true; // Placeholder for testing logic
+        }
+
         static int[] GenerateCutPoints(int nodeCount)
         {
             if (nodeCount <= 2)
                 return new int[0];
 
-            int numCuts = Random.Range(2, nodeCount - 1);
+            int numCuts = Random.Range(1, nodeCount - 2);
             List<int> cutPoints = new List<int>();
 
             while (cutPoints.Count < numCuts)
@@ -72,7 +77,6 @@ namespace EvolutionSimulator.Creatures.Genetics
                     cutPoints.Add(cutPoint);
                 }
             }
-
             cutPoints.Sort();
             return cutPoints.ToArray();
         }

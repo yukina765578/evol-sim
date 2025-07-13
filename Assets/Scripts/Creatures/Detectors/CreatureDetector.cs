@@ -1,3 +1,4 @@
+using EvolutionSimulator.Creatures.Core;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -12,7 +13,7 @@ namespace EvolutionSimulator.Creatures.Detectors
         private CircleCollider2D detector;
         private bool isReproductionReady = false;
 
-        public UnityEvent<GameObject> OnCreatureDetected = new UnityEvent<GameObject>();
+        public UnityEvent<Controller> OnCreatureDetected = new UnityEvent<Controller>();
 
         void Awake()
         {
@@ -26,17 +27,29 @@ namespace EvolutionSimulator.Creatures.Detectors
             }
 
             creatureEnergy.OnReproductionReadyChanged.AddListener(HandleReproductionChanged);
+            creatureLayerMask = 1 << LayerMask.NameToLayer("Creatures");
         }
 
         void SetupCollider()
         {
-            detector = GetComponent<CircleCollider2D>();
+            var colliders = GetComponents<CircleCollider2D>();
+            detector = null;
+            foreach (var col in colliders)
+            {
+                if (col.name == "CreatureDetector")
+                {
+                    detector = col;
+                    break;
+                }
+            }
             if (detector == null)
+            {
                 detector = gameObject.AddComponent<CircleCollider2D>();
-
+                detector.name = "CreatureDetector";
+            }
             detector.isTrigger = true;
             detector.radius = detectionRadius;
-            detector.enabled = false; // Start disabled
+            detector.enabled = false; // Initially disabled until reproduction is ready
         }
 
         void HandleReproductionChanged()
@@ -55,11 +68,20 @@ namespace EvolutionSimulator.Creatures.Detectors
             if (other.transform.root == transform.root)
                 return;
 
-            int otherLayer = 1 << other.gameObject.layer;
-            if ((creatureLayerMask & otherLayer) == 0)
+            // Get Controller component from the detected creature
+            var detectedCreature = other.GetComponentInParent<Controller>();
+            if (detectedCreature == null)
                 return;
 
-            OnCreatureDetected?.Invoke(other.gameObject);
+            Energy partnerEnergy = detectedCreature.GetComponent<Energy>();
+            if (
+                partnerEnergy == null
+                || !partnerEnergy.IsAlive
+                || !partnerEnergy.IsReproductionReady
+            )
+                return;
+            // Check if the detected creature is alive and ready for reproduction
+            OnCreatureDetected?.Invoke(detectedCreature);
         }
 
         void OnValidate()

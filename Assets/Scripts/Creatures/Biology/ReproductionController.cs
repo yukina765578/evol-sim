@@ -12,7 +12,12 @@ namespace EvolutionSimulator.Creatures.Biology
 
         private float offspringSpawnDistance = 3f;
 
-        private bool logReproduction = false;
+        private float reproductionCooldown = 5f;
+
+        private bool logReproduction = true;
+
+        private float lastReproductionTime = 0f;
+        private bool isOnCooldown = false;
 
         private Manager populationManager;
         private Energy creatureEnergy;
@@ -38,34 +43,26 @@ namespace EvolutionSimulator.Creatures.Biology
             }
         }
 
-        void OnReproductionStateChanged(bool isReady)
+        void Update()
         {
-            if (logReproduction)
+            if (isOnCooldown)
             {
-                Debug.Log($"{name} reproduction ready: {isReady}");
+                if (Time.time - lastReproductionTime >= reproductionCooldown)
+                {
+                    isOnCooldown = false;
+                }
             }
         }
 
-        void OnCreatureDetected(GameObject partner)
+        void OnCreatureDetected(Controller partnerController)
         {
-            Energy partnerEnergy = partner.GetComponent<Energy>();
+            if (isOnCooldown)
+                return;
+            Energy partnerEnergy = partnerController.GetComponent<Energy>();
             if (partnerEnergy == null)
                 return;
 
-            if (
-                !partnerEnergy.IsAlive
-                || !creatureEnergy.IsAlive
-                || !creatureEnergy.IsReproductionReady
-                || !partnerEnergy.IsReproductionReady
-            )
-                return;
-
-            if (logReproduction)
-            {
-                Debug.Log($"Reproduction attempt: {name} + {partner.name}");
-            }
-
-            TryReproduce(partner);
+            TryReproduce(partnerController.gameObject);
         }
 
         void TryReproduce(GameObject partner)
@@ -103,6 +100,9 @@ namespace EvolutionSimulator.Creatures.Biology
 
                 creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
                 partner.GetComponent<Energy>().ConsumeEnergy(reproductionEnergyCost);
+
+                lastReproductionTime = Time.time;
+                isOnCooldown = true;
 
                 if (logReproduction)
                 {

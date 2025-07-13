@@ -6,12 +6,17 @@ namespace EvolutionSimulator.Creatures.Core
     public class Energy : MonoBehaviour
     {
         // Energy Initial Settings
+        [Header("Energy Settings")]
+        [SerializeField]
+        private float currentEnergy = 50f; // Starting energy
+
+        [SerializeField]
+        private float age = 0f; // Starting age
+
         private float maxEnergy = 100f;
-        private float currentEnergy = 50f;
         private float basalConstant = 0.1f;
         private float movementConstant = 0.001f;
         private float powerExponent = 1.5f;
-        private float age = 0f;
         private float maxAge = 300f; // 5 minutes
         private float reproductionThreshold = 80f;
         private bool reproductionReady = false;
@@ -51,6 +56,7 @@ namespace EvolutionSimulator.Creatures.Core
             UpdateEnergy();
             UpdateAge();
             CheckDeath();
+            CheckReproduction();
         }
 
         void UpdateEnergy()

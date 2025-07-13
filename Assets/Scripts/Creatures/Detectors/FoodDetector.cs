@@ -28,21 +28,35 @@ namespace EvolutionSimulator.Creatures.Detectors
             {
                 Debug.LogError("FoodDetector requires CreatureEnergy component in parent!");
             }
+            foodLayerMask = 1 << LayerMask.NameToLayer("Food");
         }
 
         void SetupCollider()
         {
-            detector = GetComponent<CircleCollider2D>();
+            var colliders = GetComponents<CircleCollider2D>();
+            detector = null;
+
+            foreach (var col in colliders)
+            {
+                if (col.name == "FoodDetector")
+                {
+                    detector = col as CircleCollider2D;
+                    break;
+                }
+            }
             if (detector == null)
+            {
                 detector = gameObject.AddComponent<CircleCollider2D>();
+                detector.name = "FoodDetector";
+            }
 
             detector.isTrigger = true;
             detector.radius = detectionRadius;
+            detector.enabled = true;
         }
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            Debug.Log($"FoodDetector triggered by: {other.name}");
             if (!creatureEnergy.IsAlive)
                 return;
 
