@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EvolutionSimulator.Creatures.Genetics;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creatures.Core
@@ -12,12 +13,25 @@ namespace EvolutionSimulator.Creatures.Core
         [SerializeField]
         private bool showVelocityDebug = false;
 
+        private CreatureGenome genome;
         private bool prevThrustDebug = false;
         private bool isDead = false;
 
         private Rigidbody2D creatureRigidbody;
         private List<Segment> segments = new List<Segment>();
         private LineRenderer velocityDebugLine;
+
+        public CreatureGenome GetGenome() => genome;
+
+        public void Initialize(CreatureGenome creatureGenome)
+        {
+            genome = creatureGenome;
+            if (genome == null)
+            {
+                Debug.LogError("CreatureController requires a valid CreatureGenome!");
+                return;
+            }
+        }
 
         void Start()
         {

@@ -34,6 +34,7 @@ namespace EvolutionSimulator.Creatures.Core
         public UnityEvent OnReproductionReadyChanged = new UnityEvent();
 
         public bool IsAlive => isAlive;
+        public bool IsReproductionReady => reproductionReady;
 
         void Start()
         {

@@ -35,14 +35,20 @@ namespace EvolutionSimulator.Creatures.Population
             // Add energy system
             var energy = creatureObj.AddComponent<Energy>();
 
+            var reproductionController = creatureObj.AddComponent<ReproductionController>();
+
             // Build creature body
             var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
 
             if (nodes.Count > 0)
-                nodes[0].gameObject.AddComponent<CollisionDetector>();
+            {
+                nodes[0].gameObject.AddComponent<FoodDetector>();
+                nodes[0].gameObject.AddComponent<ReproductionDetector>();
+            }
 
             // Add controller last (after body is built)
             var controller = creatureObj.AddComponent<Controller>();
+            controller.Initialize(genome);
 
             return creatureObj;
         }

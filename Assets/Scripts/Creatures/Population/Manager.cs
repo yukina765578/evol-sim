@@ -44,6 +44,7 @@ namespace EvolutionSimulator.Creatures.Population
         private float spawnTimer = 0f;
 
         public List<GameObject> Creatures => new List<GameObject>(creatures);
+        public int MaxPopulationSize => maxPopulationSize;
 
         void Awake()
         {
