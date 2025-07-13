@@ -40,6 +40,8 @@ namespace EvolutionSimulator.Creatures.Core
 
         public bool IsAlive => isAlive;
         public bool IsReproductionReady => reproductionReady;
+        public float CurrentEnergy => currentEnergy;
+        public float MaxEnergy => maxEnergy;
 
         void Start()
         {

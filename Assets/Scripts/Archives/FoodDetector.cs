@@ -55,6 +55,9 @@ namespace EvolutionSimulator.Creature
             if (foodItem != null && !foodItem.IsConsumed)
             {
                 // Check if this food hasn't been consumed yet
+                // Check if energy is not already full
+                if (creatureEnergy.CurrentEnergy > creatureEnergy.MaxEnergy - foodItem.EnergyValue)
+                    return;
                 ConsumeFood(foodItem);
             }
         }

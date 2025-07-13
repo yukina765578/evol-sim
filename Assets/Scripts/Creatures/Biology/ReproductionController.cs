@@ -14,7 +14,7 @@ namespace EvolutionSimulator.Creatures.Biology
 
         private float reproductionCooldown = 5f;
 
-        private bool logReproduction = true;
+        private bool logReproduction = false;
 
         private float lastReproductionTime = 0f;
         private bool isOnCooldown = false;
@@ -40,6 +40,7 @@ namespace EvolutionSimulator.Creatures.Biology
             if (creatureDetector != null)
             {
                 creatureDetector.OnCreatureDetected.AddListener(OnCreatureDetected);
+                EventDebugger.CreatureDetectionListeners++;
             }
         }
 
@@ -140,6 +141,7 @@ namespace EvolutionSimulator.Creatures.Biology
             if (creatureDetector != null)
             {
                 creatureDetector.OnCreatureDetected.RemoveListener(OnCreatureDetected);
+                EventDebugger.CreatureDetectionListeners--;
             }
         }
 

@@ -119,7 +119,12 @@ namespace EvolutionSimulator.Environment
 
             try
             {
-                GameObject foodObj = Instantiate(foodPrefab, position, Quaternion.identity, transform);
+                GameObject foodObj = Instantiate(
+                    foodPrefab,
+                    position,
+                    Quaternion.identity,
+                    transform
+                );
                 FoodItem foodItem = foodObj.GetComponent<FoodItem>();
 
                 if (foodItem == null)
@@ -142,11 +147,13 @@ namespace EvolutionSimulator.Environment
         {
             if (food != null)
                 activeFoods.Remove(food);
-            
+
             totalFoodConsumed++;
-            
+
             if (enableDebugLogging)
-                Debug.Log($"Food consumed at {position}. Active: {activeFoods.Count}, Pending: {pendingRespawns.Count}");
+                Debug.Log(
+                    $"Food consumed at {position}. Active: {activeFoods.Count}, Pending: {pendingRespawns.Count}"
+                );
 
             // Prevent duplicate respawns at same position
             if (!pendingRespawns.Contains(position))
@@ -170,25 +177,26 @@ namespace EvolutionSimulator.Environment
                 yield break;
             }
 
-            float currentNoise = PerlinNoise.SampleRaw(
-                position.x,
-                position.y,
-                noiseSettings.scale,
-                noiseSettings.offset,
-                noiseSettings.contrast
-            );
-
-            // Ensure minimum respawn chance
-            float respawnChance = Mathf.Max(currentNoise, 0.1f);
-            
-            if (Random.value < respawnChance)
-            {
-                SpawnFood(position);
-            }
-            else if (enableDebugLogging)
-            {
-                Debug.Log($"Respawn failed at {position} (noise: {currentNoise:F2})");
-            }
+            // float currentNoise = PerlinNoise.SampleRaw(
+            //     position.x,
+            //     position.y,
+            //     noiseSettings.scale,
+            //     noiseSettings.offset,
+            //     noiseSettings.contrast
+            // );
+            //
+            // // Ensure minimum respawn chance
+            // float respawnChance = Mathf.Max(currentNoise, 0.1f);
+            //
+            // if (Random.value < respawnChance)
+            // {
+            //     SpawnFood(position);
+            // }
+            SpawnFood(position);
+            // else if (enableDebugLogging)
+            // {
+            //     Debug.Log($"Respawn failed at {position} (noise: {currentNoise:F2})");
+            // }
         }
 
         void OnDestroy()

@@ -66,6 +66,12 @@ namespace EvolutionSimulator.Creatures.Population
         void Update()
         {
             HandleAutoSpawning();
+
+            // log debug infor every 5 sec
+            if (Time.time % 5 < Time.deltaTime)
+            {
+                EventDebugger.LogCounts();
+            }
         }
 
         void HandleAutoSpawning()
@@ -79,11 +85,15 @@ namespace EvolutionSimulator.Creatures.Population
                 spawnTimer = 0f;
                 if (creatures.Count < initialPopulationSize)
                 {
-                    spawner.SpawnCreature();
+                    GameObject creature = spawner.SpawnCreature();
 
                     if (showSpawnProgress)
                     {
                         Debug.Log($"Spawned creature {creatures.Count}/{initialPopulationSize}");
+                    }
+                    if (creature != null)
+                    {
+                        RegisterExistingCreature(creature);
                     }
                 }
             }
@@ -125,6 +135,7 @@ namespace EvolutionSimulator.Creatures.Population
                 if (energy != null)
                 {
                     energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
+                    EventDebugger.CreatureDeathListeners++;
                 }
 
                 if (showSpawnProgress)
@@ -140,6 +151,13 @@ namespace EvolutionSimulator.Creatures.Population
         {
             creatures.Remove(creature);
             totalCreatureDeaths++;
+            // remove event listener
+            Energy energy = creature.GetComponent<Energy>();
+            if (energy != null)
+            {
+                energy.OnDeath.RemoveListener(() => OnCreatureDeath(creature));
+                EventDebugger.CreatureDeathListeners--;
+            }
             if (logDeaths)
             {
                 Debug.Log(
@@ -156,14 +174,11 @@ namespace EvolutionSimulator.Creatures.Population
                 if (energy != null)
                 {
                     energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
+                    EventDebugger.CreatureDeathListeners++;
                 }
 
                 creatures.Add(creature);
                 totalCreatureSpawned++;
-
-                Debug.Log(
-                    $"Registered existing creature: {creature.name} (Total: {totalCreatureSpawned})"
-                );
             }
         }
 

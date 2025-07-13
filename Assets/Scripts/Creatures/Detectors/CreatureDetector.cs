@@ -27,6 +27,7 @@ namespace EvolutionSimulator.Creatures.Detectors
             }
 
             creatureEnergy.OnReproductionReadyChanged.AddListener(HandleReproductionChanged);
+            EventDebugger.ReproductionListeners++;
             creatureLayerMask = 1 << LayerMask.NameToLayer("Creatures");
         }
 
@@ -99,6 +100,7 @@ namespace EvolutionSimulator.Creatures.Detectors
             if (creatureEnergy != null)
             {
                 creatureEnergy.OnReproductionReadyChanged.RemoveListener(HandleReproductionChanged);
+                EventDebugger.ReproductionListeners--;
             }
         }
     }

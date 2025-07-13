@@ -25,6 +25,9 @@ namespace EvolutionSimulator.Creatures.Core
         private bool debugMode = false;
         private Energy energy;
 
+        private Material lineRendererMaterial;
+        private Material thrustDebugMaterial;
+
         void Awake()
         {
             SetupLineRenderer();
@@ -68,7 +71,8 @@ namespace EvolutionSimulator.Creatures.Core
             if (lineRenderer == null)
                 lineRenderer = gameObject.AddComponent<LineRenderer>();
 
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            lineRendererMaterial = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.material = lineRendererMaterial;
             lineRenderer.positionCount = 2;
             lineRenderer.useWorldSpace = true;
             lineRenderer.sortingOrder = 0;
@@ -80,7 +84,8 @@ namespace EvolutionSimulator.Creatures.Core
             debugObj.transform.SetParent(transform);
 
             thrustDebugLine = debugObj.AddComponent<LineRenderer>();
-            thrustDebugLine.material = new Material(Shader.Find("Sprites/Default"));
+            thrustDebugMaterial = new Material(Shader.Find("Sprites/Default"));
+            thrustDebugLine.material = thrustDebugMaterial;
             thrustDebugLine.positionCount = 2;
             thrustDebugLine.useWorldSpace = true;
             thrustDebugLine.sortingOrder = 5;
@@ -187,6 +192,20 @@ namespace EvolutionSimulator.Creatures.Core
             Vector3 thrustEnd = segmentCenter + (Vector3)(thrustDirection * thrustMagnitude * 5f);
             thrustDebugLine.SetPosition(0, segmentCenter);
             thrustDebugLine.SetPosition(1, thrustEnd);
+        }
+
+        void OnDestroy()
+        {
+            if (lineRenderer != null)
+            {
+                Destroy(lineRendererMaterial);
+                lineRendererMaterial = null;
+            }
+            if (thrustDebugLine != null)
+            {
+                Destroy(thrustDebugMaterial);
+                thrustDebugMaterial = null;
+            }
         }
 
         void OnValidate()

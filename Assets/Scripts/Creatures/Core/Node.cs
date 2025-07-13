@@ -11,6 +11,8 @@ namespace EvolutionSimulator.Creatures.Core
 
         private Energy energyComponent;
 
+        private Texture2D nodeTexture;
+
         void Awake()
         {
             SetupRenderer();
@@ -75,7 +77,7 @@ namespace EvolutionSimulator.Creatures.Core
         {
             // Create circle texture for node
             int resolution = 64;
-            Texture2D texture = new Texture2D(resolution, resolution);
+            nodeTexture = new Texture2D(resolution, resolution);
 
             Vector2 center = new Vector2(resolution / 2f, resolution / 2f);
             float radius = resolution / 2f - 1f;
@@ -89,19 +91,19 @@ namespace EvolutionSimulator.Creatures.Core
 
                     if (distance <= radius)
                     {
-                        texture.SetPixel(x, y, Color.white);
+                        nodeTexture.SetPixel(x, y, Color.white);
                     }
                     else
                     {
-                        texture.SetPixel(x, y, Color.clear);
+                        nodeTexture.SetPixel(x, y, Color.clear);
                     }
                 }
             }
 
-            texture.Apply();
+            nodeTexture.Apply();
 
             return Sprite.Create(
-                texture,
+                nodeTexture,
                 new Rect(0, 0, resolution, resolution),
                 new Vector2(0.5f, 0.5f)
             );
@@ -116,6 +118,15 @@ namespace EvolutionSimulator.Creatures.Core
         public Vector3 GetPosition()
         {
             return transform.position;
+        }
+
+        void OnDestroy()
+        {
+            if (nodeTexture != null)
+            {
+                Destroy(nodeTexture);
+                nodeTexture = null;
+            }
         }
 
         void OnValidate()
