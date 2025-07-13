@@ -90,13 +90,13 @@ namespace EvolutionSimulator.Creature
 
         bool IsPositionValid(Vector3 position)
         {
-            foreach (Vector3 existingPos in spawnedPositions)
-            {
-                if (Vector3.Distance(position, existingPos) < minDistanceBetweenCreatures)
-                {
-                    return false;
-                }
-            }
+            // foreach (Vector3 existingPos in spawnedPositions)
+            // {
+            //     if (Vector3.Distance(position, existingPos) < minDistanceBetweenCreatures)
+            //     {
+            //         return false;
+            //     }
+            // }
             return true;
         }
 

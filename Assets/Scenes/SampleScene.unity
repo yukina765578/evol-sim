@@ -119,6 +119,78 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &93079341
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 93079343}
+  - component: {fileID: 93079342}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &93079342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93079341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b688772f4b5de6644bddebd018d7d09e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnOnStart: 1
+  spawnPosition: {x: 0, y: 0, z: 0}
+  testNodes:
+  - parentIndex: -1
+    baseAngle: 0
+    oscSpeed: 0
+    maxAngle: 0
+    forwardRatio: 0
+  - parentIndex: 0
+    baseAngle: 0
+    oscSpeed: 3
+    maxAngle: 45
+    forwardRatio: 0.2
+  - parentIndex: 0
+    baseAngle: 120
+    oscSpeed: 3.5
+    maxAngle: -45
+    forwardRatio: 0.6
+  - parentIndex: 1
+    baseAngle: 45
+    oscSpeed: 4
+    maxAngle: -60
+    forwardRatio: 0.5
+  - parentIndex: 2
+    baseAngle: 180
+    oscSpeed: 2.5
+    maxAngle: 120
+    forwardRatio: 0.3
+--- !u!4 &93079343
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 93079341}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -154.17372, y: 7.16098, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &129217375
 GameObject:
   m_ObjectHideFlags: 0
@@ -530,8 +602,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxFoodPerCell: 15
   foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
-  energyValue: 10
-  respawnDelay: 5
+  energyValue: 4
+  respawnDelay: 1
+  enableDebugLogging: 0
 --- !u!114 &1348387820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -568,15 +641,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 1348387814}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f763cce941aaad49b39dd71d396109e, type: 3}
+  m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 225
+  initialPopulationSize: 1000
   maxPopulationSize: 1000
   spawnOnStart: 1
-  totalCreaturesSpawned: 0
+  enableAutoSpawn: 1
+  spawnInterval: 5
+  totalCreatureSpawned: 0
   totalCreatureDeaths: 0
-  averageLifespan: 0
   showSpawnProgress: 1
   logDeaths: 0
 --- !u!114 &1348387822
@@ -588,7 +662,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1348387814}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 94a16e4a935fb9b40b9a80f04e3c4da3, type: 3}
+  m_Script: {fileID: 11500000, guid: 668392226cfeb724bbeb83c4d8c73dc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   enableWrapping: 1
@@ -618,50 +692,39 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1472847868}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7dcb5fdc19dbe444a834851fcaf0cc49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   spawnOnStart: 1
   spawnPosition: {x: 0, y: 0, z: 0}
-  testGenes:
+  testNodes:
   - parentIndex: -1
+    baseAngle: 0
+    oscSpeed: 0
+    maxAngle: 0
+    forwardRatio: 0
+  - parentIndex: 0
     baseAngle: 0
     oscSpeed: 3
     maxAngle: 45
     forwardRatio: 0.2
-    childCount: 2
-  - parentIndex: -1
-    baseAngle: 240
+  - parentIndex: 0
+    baseAngle: 120
     oscSpeed: 3.5
     maxAngle: -45
     forwardRatio: 0.6
-    childCount: 2
-  - parentIndex: 0
-    baseAngle: -45
+  - parentIndex: 1
+    baseAngle: 45
     oscSpeed: 4
     maxAngle: -60
     forwardRatio: 0.5
-    childCount: 0
-  - parentIndex: 0
-    baseAngle: 15
-    oscSpeed: 2.2
-    maxAngle: 75
-    forwardRatio: 0.25
-    childCount: 0
-  - parentIndex: 1
+  - parentIndex: 2
     baseAngle: 180
     oscSpeed: 2.5
     maxAngle: 120
     forwardRatio: 0.3
-    childCount: 0
-  - parentIndex: 1
-    baseAngle: 280
-    oscSpeed: 4.2
-    maxAngle: 30
-    forwardRatio: 0.45
-    childCount: 0
 --- !u!4 &1472847870
 Transform:
   m_ObjectHideFlags: 0
@@ -677,66 +740,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1598720960
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1598720962}
-  - component: {fileID: 1598720963}
-  m_Layer: 0
-  m_Name: SimpleCreature
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1598720962
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598720960}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1598720963
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1598720960}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a907b160cb8b2144b1cab6ad55927ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  oscillationSpeed: 2
-  maxAngle: 90
-  oscillationSpeed1: 2
-  maxAngle1: 90
-  phaseOffset: 0
-  forwardRatio: 0.05
-  segment0BaseAngle: 0
-  segment1BaseAngle: 45
-  segmentLength: 2
-  nodeSize: 1
-  nodeColor: {r: 0, g: 0, b: 1, a: 1}
-  segmentColor: {r: 1, g: 1, b: 1, a: 1}
-  segmentWidth: 0.1
-  showThrustDebug: 1
-  showVelocityDebug: 1
-  slidingFriction: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -745,5 +748,5 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 129217377}
   - {fileID: 1348387816}
-  - {fileID: 1598720962}
   - {fileID: 1472847870}
+  - {fileID: 93079343}

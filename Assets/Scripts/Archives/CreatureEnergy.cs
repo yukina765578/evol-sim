@@ -32,6 +32,19 @@ namespace EvolutionSimulator.Creature
         [SerializeField]
         private float reproductionThreshold = 80f;
 
+        [Header("Dynamic Aging")]
+        [SerializeField]
+        private float normalAgingRate = 1f;
+
+        [SerializeField]
+        private float lowEnergyMultiplier = 1.5f; // Below 50%
+
+        [SerializeField]
+        private float criticalEnergyMultiplier = 3f; // Below 20%
+
+        [SerializeField]
+        private float starvationMultiplier = 5f; // At 0%
+
         [Header("Events")]
         public UnityEvent<float> OnEnergyChanged = new UnityEvent<float>();
         public UnityEvent OnDeath = new UnityEvent();
@@ -63,10 +76,30 @@ namespace EvolutionSimulator.Creature
             if (!IsAlive)
                 return;
 
-            age += Time.deltaTime;
+            ProcessAging();
             ConsumeBasalEnergy();
             CheckReproductionState();
             CheckDeath();
+        }
+
+        void ProcessAging()
+        {
+            float agingMultiplier = CalculateAgingMultiplier();
+            age += normalAgingRate * agingMultiplier * Time.deltaTime;
+        }
+
+        float CalculateAgingMultiplier()
+        {
+            float energyRatio = EnergyRatio;
+
+            if (energyRatio <= 0f)
+                return starvationMultiplier;
+            else if (energyRatio <= 0.2f)
+                return criticalEnergyMultiplier;
+            else if (energyRatio <= 0.5f)
+                return lowEnergyMultiplier;
+            else
+                return 1f; // Normal aging
         }
 
         void SetupReproductionCollider()

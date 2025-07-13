@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,10 +20,16 @@ namespace EvolutionSimulator.Environment
         [SerializeField]
         private float respawnDelay = 5f;
 
+        [Header("Debug")]
+        [SerializeField]
+        private bool enableDebugLogging = false;
+
         private NoiseManager noiseManager;
         private NoiseSettings noiseSettings;
         private List<FoodItem> activeFoods = new List<FoodItem>();
-        private float timeOffset = 0f;
+        private HashSet<Vector2> pendingRespawns = new HashSet<Vector2>();
+        private int totalFoodSpawned = 0;
+        private int totalFoodConsumed = 0;
 
         void Start()
         {
@@ -33,22 +40,24 @@ namespace EvolutionSimulator.Environment
                 return;
             }
             noiseSettings = noiseManager.Settings;
-
             InitialSpawn();
         }
 
         void Update()
         {
-            if (noiseSettings.animate)
-            {
-                timeOffset += noiseSettings.animationSpeed * Time.deltaTime;
-            }
+            CleanupDestroyedFood();
+        }
+
+        void CleanupDestroyedFood()
+        {
+            activeFoods.RemoveAll(food => food == null);
         }
 
         void InitialSpawn()
         {
-            if (noiseManager == null)
+            if (noiseManager == null || foodPrefab == null)
                 return;
+
             Bounds worldBounds = noiseManager.WorldBounds;
             Vector2 cellSize = new Vector2(
                 worldBounds.size.x / noiseSettings.gridWidth,
@@ -84,6 +93,9 @@ namespace EvolutionSimulator.Environment
                     }
                 }
             }
+
+            if (enableDebugLogging)
+                Debug.Log($"Initial spawn complete: {activeFoods.Count} food items created");
         }
 
         Vector2 GetRandomPositionInCell(Vector2 cellCenter, Vector2 cellSize)
@@ -100,27 +112,63 @@ namespace EvolutionSimulator.Environment
         void SpawnFood(Vector2 position)
         {
             if (foodPrefab == null)
+            {
+                Debug.LogError("Food prefab is null!");
                 return;
+            }
 
-            GameObject foodObj = Instantiate(foodPrefab, position, Quaternion.identity, transform);
-            FoodItem foodItem = foodObj.GetComponent<FoodItem>();
+            try
+            {
+                GameObject foodObj = Instantiate(foodPrefab, position, Quaternion.identity, transform);
+                FoodItem foodItem = foodObj.GetComponent<FoodItem>();
 
-            if (foodItem == null)
-                foodItem = foodObj.AddComponent<FoodItem>();
+                if (foodItem == null)
+                    foodItem = foodObj.AddComponent<FoodItem>();
 
-            foodItem.Initialize(energyValue, this);
-            activeFoods.Add(foodItem);
+                foodItem.Initialize(energyValue, this);
+                activeFoods.Add(foodItem);
+                totalFoodSpawned++;
+
+                if (enableDebugLogging)
+                    Debug.Log($"Food spawned at {position}. Total active: {activeFoods.Count}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to spawn food at {position}: {e.Message}");
+            }
         }
 
         public void OnFoodConsumed(FoodItem food, Vector2 position)
         {
-            activeFoods.Remove(food);
-            StartCoroutine(RespawnFood(position));
+            if (food != null)
+                activeFoods.Remove(food);
+            
+            totalFoodConsumed++;
+            
+            if (enableDebugLogging)
+                Debug.Log($"Food consumed at {position}. Active: {activeFoods.Count}, Pending: {pendingRespawns.Count}");
+
+            // Prevent duplicate respawns at same position
+            if (!pendingRespawns.Contains(position))
+            {
+                pendingRespawns.Add(position);
+                StartCoroutine(RespawnFood(position));
+            }
         }
 
-        System.Collections.IEnumerator RespawnFood(Vector2 position)
+        IEnumerator RespawnFood(Vector2 position)
         {
             yield return new WaitForSeconds(respawnDelay);
+
+            // Remove from pending after delay
+            pendingRespawns.Remove(position);
+
+            // Validate dependencies still exist
+            if (noiseManager == null || noiseSettings == null)
+            {
+                Debug.LogWarning("NoiseManager or settings became null during respawn");
+                yield break;
+            }
 
             float currentNoise = PerlinNoise.SampleRaw(
                 position.x,
@@ -130,10 +178,29 @@ namespace EvolutionSimulator.Environment
                 noiseSettings.contrast
             );
 
-            if (Random.value < currentNoise)
+            // Ensure minimum respawn chance
+            float respawnChance = Mathf.Max(currentNoise, 0.1f);
+            
+            if (Random.value < respawnChance)
             {
                 SpawnFood(position);
             }
+            else if (enableDebugLogging)
+            {
+                Debug.Log($"Respawn failed at {position} (noise: {currentNoise:F2})");
+            }
         }
+
+        void OnDestroy()
+        {
+            StopAllCoroutines();
+            pendingRespawns.Clear();
+        }
+
+        // Debug info
+        public int ActiveFoodCount => activeFoods.Count;
+        public int PendingRespawnCount => pendingRespawns.Count;
+        public int TotalSpawned => totalFoodSpawned;
+        public int TotalConsumed => totalFoodConsumed;
     }
 }

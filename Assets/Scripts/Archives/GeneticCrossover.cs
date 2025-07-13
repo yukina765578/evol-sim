@@ -15,6 +15,7 @@ namespace EvolutionSimulator.Creature
         )
         {
             int minNodes = Mathf.Min(parent1.NodeCount, parent2.NodeCount);
+            int maxNodes = Mathf.Max(parent1.NodeCount, parent2.NodeCount);
 
             var cutPoints = GenerateCutPoints(minNodes);
             var offSpringNodes1 = new List<NodeGene>();
@@ -23,7 +24,7 @@ namespace EvolutionSimulator.Creature
             bool swapping = false;
             int cutIndex = 0;
 
-            for (int i = 0; i < minNodes; i++)
+            for (int i = 0; i < maxNodes; i++)
             {
                 if (cutIndex < cutPoints.Length && i == cutPoints[cutIndex])
                 {
@@ -31,18 +32,22 @@ namespace EvolutionSimulator.Creature
                     cutIndex++;
                 }
 
-                NodeGene node1 = parent1.nodes[i];
-                NodeGene node2 = parent2.nodes[i];
+                bool hasNode1 = i < parent1.NodeCount;
+                bool hasNode2 = i < parent2.NodeCount;
 
                 if (swapping)
                 {
-                    offSpringNodes1.Add(node2);
-                    offSpringNodes2.Add(node1);
+                    if (hasNode2)
+                        offSpringNodes1.Add(parent2.nodes[i]);
+                    if (hasNode1)
+                        offSpringNodes2.Add(parent1.nodes[i]);
                 }
                 else
                 {
-                    offSpringNodes1.Add(node1);
-                    offSpringNodes2.Add(node2);
+                    if (hasNode1)
+                        offSpringNodes1.Add(parent1.nodes[i]);
+                    if (hasNode2)
+                        offSpringNodes2.Add(parent2.nodes[i]);
                 }
             }
 
