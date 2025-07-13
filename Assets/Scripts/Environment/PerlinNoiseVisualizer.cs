@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace EvolutionSimulator.Environment
@@ -30,6 +31,9 @@ namespace EvolutionSimulator.Environment
         private List<Text> debugTexts = new List<Text>();
         private List<Vector2> gridWorldPositions = new List<Vector2>();
 
+        private UnityAction generateGridTextureAction;
+        private UnityAction updateDebugTextsAction;
+
         void Start()
         {
             noiseManager = GetComponent<NoiseManager>();
@@ -48,9 +52,13 @@ namespace EvolutionSimulator.Environment
                 UpdateDebugTexts();
             }
 
+            generateGridTextureAction = GenerateGridTexture;
+            updateDebugTextsAction = UpdateDebugTexts;
+
             // Subscribe to noise updates for synchronization
-            noiseManager.OnNoiseUpdated.AddListener(GenerateGridTexture);
-            noiseManager.OnNoiseUpdated.AddListener(UpdateDebugTexts);
+            noiseManager.OnNoiseUpdated.AddListener(generateGridTextureAction);
+            noiseManager.OnNoiseUpdated.AddListener(updateDebugTextsAction);
+            EventDebugger.NoiseUpdateListeners += 2;
         }
 
         void Update()
@@ -64,11 +72,24 @@ namespace EvolutionSimulator.Environment
 
         void OnDestroy()
         {
-            // Prevent memory leaks
             if (noiseManager != null)
             {
-                noiseManager.OnNoiseUpdated.RemoveListener(GenerateGridTexture);
-                noiseManager.OnNoiseUpdated.RemoveListener(UpdateDebugTexts);
+                if (generateGridTextureAction != null)
+                {
+                    noiseManager.OnNoiseUpdated.RemoveListener(generateGridTextureAction);
+                    EventDebugger.NoiseUpdateListeners--;
+                }
+                if (updateDebugTextsAction != null)
+                {
+                    noiseManager.OnNoiseUpdated.RemoveListener(updateDebugTextsAction);
+                    EventDebugger.NoiseUpdateListeners--;
+                }
+            }
+
+            if (noiseTexture != null)
+            {
+                Destroy(noiseTexture);
+                noiseTexture = null;
             }
         }
 
@@ -103,6 +124,9 @@ namespace EvolutionSimulator.Environment
 
         void CreateDebugTexts()
         {
+            if (noiseManager == null || noiseSettings == null)
+                return;
+
             Bounds worldBounds = noiseManager.WorldBounds;
 
             Vector2 cellSize = new Vector2(
@@ -111,6 +135,12 @@ namespace EvolutionSimulator.Environment
             );
 
             gridWorldPositions.Clear();
+
+            foreach (Text text in debugTexts)
+            {
+                if (text != null)
+                    Destroy(text.gameObject);
+            }
             debugTexts.Clear();
 
             for (int x = 0; x < noiseSettings.gridWidth; x++)
@@ -152,6 +182,9 @@ namespace EvolutionSimulator.Environment
 
             for (int i = 0; i < gridWorldPositions.Count && i < debugTexts.Count; i++)
             {
+                if (debugTexts[i] == null)
+                    continue;
+
                 Vector3 worldPos = new Vector3(gridWorldPositions[i].x, gridWorldPositions[i].y, 0);
                 Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPos);
 
@@ -170,11 +203,14 @@ namespace EvolutionSimulator.Environment
 
         void UpdateDebugTexts()
         {
-            if (!showDebugValues)
+            if (!showDebugValues || noiseSettings == null)
                 return;
 
             for (int i = 0; i < gridWorldPositions.Count && i < debugTexts.Count; i++)
             {
+                if (debugTexts[i] == null)
+                    continue;
+
                 Vector2 cellCenter = gridWorldPositions[i];
 
                 float rawValue = PerlinNoise.SampleRaw(
@@ -185,8 +221,6 @@ namespace EvolutionSimulator.Environment
                     noiseSettings.contrast
                 );
 
-                Debug.Log($"Debug Text {i}: {rawValue}");
-
                 debugTexts[i].text = rawValue.ToString("F2");
             }
 
@@ -195,7 +229,7 @@ namespace EvolutionSimulator.Environment
 
         void GenerateGridTexture()
         {
-            if (noiseManager == null)
+            if (noiseManager == null || noiseSettings == null)
                 return;
 
             if (noiseTexture == null)
@@ -261,6 +295,9 @@ namespace EvolutionSimulator.Environment
 
         void UpdateSprite()
         {
+            if (noiseManager == null || spriteRenderer == null || noiseTexture == null)
+                return;
+
             Vector2 worldSize = noiseManager.WorldBounds.size;
             Sprite sprite = Sprite.Create(
                 noiseTexture,
@@ -274,7 +311,7 @@ namespace EvolutionSimulator.Environment
 
         public float GetNoiseValueAtPosition(Vector3 position)
         {
-            if (noiseManager == null)
+            if (noiseManager == null || noiseSettings == null)
                 return 0f;
 
             return PerlinNoise.SampleRaw(
@@ -297,9 +334,12 @@ namespace EvolutionSimulator.Environment
 
                 foreach (Text text in debugTexts)
                 {
-                    text.color = debugTextColor;
-                    text.fontSize = debugFontSize;
-                    text.gameObject.SetActive(showDebugValues);
+                    if (text != null)
+                    {
+                        text.color = debugTextColor;
+                        text.fontSize = debugFontSize;
+                        text.gameObject.SetActive(showDebugValues);
+                    }
                 }
 
                 if (noiseManager != null)

@@ -3,17 +3,15 @@ using EvolutionSimulator.Creatures.Detectors;
 using EvolutionSimulator.Creatures.Genetics;
 using EvolutionSimulator.Creatures.Population;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace EvolutionSimulator.Creatures.Biology
 {
     public class ReproductionController : MonoBehaviour
     {
         private float reproductionEnergyCost = 80f;
-
         private float offspringSpawnDistance = 3f;
-
         private float reproductionCooldown = 5f;
-
         private bool logReproduction = false;
 
         private float lastReproductionTime = 0f;
@@ -22,6 +20,8 @@ namespace EvolutionSimulator.Creatures.Biology
         private Manager populationManager;
         private Energy creatureEnergy;
         private CreatureDetector creatureDetector;
+
+        private UnityAction<Controller> onCreatureDetectedAction;
 
         void Awake()
         {
@@ -39,7 +39,8 @@ namespace EvolutionSimulator.Creatures.Biology
             creatureDetector = GetComponentInChildren<CreatureDetector>();
             if (creatureDetector != null)
             {
-                creatureDetector.OnCreatureDetected.AddListener(OnCreatureDetected);
+                onCreatureDetectedAction = OnCreatureDetected;
+                creatureDetector.OnCreatureDetected.AddListener(onCreatureDetectedAction);
                 EventDebugger.CreatureDetectionListeners++;
             }
         }
@@ -59,6 +60,10 @@ namespace EvolutionSimulator.Creatures.Biology
         {
             if (isOnCooldown)
                 return;
+
+            if (partnerController == null)
+                return;
+
             Energy partnerEnergy = partnerController.GetComponent<Energy>();
             if (partnerEnergy == null)
                 return;
@@ -68,6 +73,9 @@ namespace EvolutionSimulator.Creatures.Biology
 
         void TryReproduce(GameObject partner)
         {
+            if (populationManager == null || partner == null)
+                return;
+
             if (populationManager.Creatures.Count >= populationManager.MaxPopulationSize)
             {
                 if (logReproduction)
@@ -99,8 +107,12 @@ namespace EvolutionSimulator.Creatures.Biology
             {
                 populationManager.RegisterExistingCreature(offspring);
 
-                creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
-                partner.GetComponent<Energy>().ConsumeEnergy(reproductionEnergyCost);
+                if (creatureEnergy != null)
+                    creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
+
+                Energy partnerEnergy = partner.GetComponent<Energy>();
+                if (partnerEnergy != null)
+                    partnerEnergy.ConsumeEnergy(reproductionEnergyCost);
 
                 lastReproductionTime = Time.time;
                 isOnCooldown = true;
@@ -127,6 +139,9 @@ namespace EvolutionSimulator.Creatures.Biology
 
         CreatureGenome ExtractGenomeFromCreature(GameObject creature)
         {
+            if (creature == null)
+                return null;
+
             Controller creatureController = creature.GetComponent<Controller>();
             if (creatureController == null)
             {
@@ -138,9 +153,9 @@ namespace EvolutionSimulator.Creatures.Biology
 
         void OnDestroy()
         {
-            if (creatureDetector != null)
+            if (creatureDetector != null && onCreatureDetectedAction != null)
             {
-                creatureDetector.OnCreatureDetected.RemoveListener(OnCreatureDetected);
+                creatureDetector.OnCreatureDetected.RemoveListener(onCreatureDetectedAction);
                 EventDebugger.CreatureDetectionListeners--;
             }
         }

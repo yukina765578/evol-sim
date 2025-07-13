@@ -602,8 +602,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxFoodPerCell: 15
   foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
-  energyValue: 10
-  respawnDelay: 20
+  energyValue: 5
+  respawnDelay: 1
   enableDebugLogging: 0
 --- !u!114 &1348387820
 MonoBehaviour:
@@ -644,10 +644,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 250
-  maxPopulationSize: 500
+  initialPopulationSize: 50
+  maxPopulationSize: 400
   spawnOnStart: 1
-  enableAutoSpawn: 1
+  enableAutoSpawn: 0
   spawnInterval: 5
   totalCreatureSpawned: 0
   totalCreatureDeaths: 0

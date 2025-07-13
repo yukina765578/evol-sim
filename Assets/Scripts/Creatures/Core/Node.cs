@@ -13,6 +13,9 @@ namespace EvolutionSimulator.Creatures.Core
 
         private Texture2D nodeTexture;
 
+        private static Texture2D sharedNodeTexture;
+        private static int textureReferenceCount = 0;
+
         void Awake()
         {
             SetupRenderer();
@@ -75,36 +78,41 @@ namespace EvolutionSimulator.Creatures.Core
 
         Sprite CreateNodeSprite()
         {
-            // Create circle texture for node
-            int resolution = 64;
-            nodeTexture = new Texture2D(resolution, resolution);
-
-            Vector2 center = new Vector2(resolution / 2f, resolution / 2f);
-            float radius = resolution / 2f - 1f;
-
-            for (int x = 0; x < resolution; x++)
+            if (sharedNodeTexture == null)
             {
-                for (int y = 0; y < resolution; y++)
-                {
-                    Vector2 pos = new Vector2(x, y);
-                    float distance = Vector2.Distance(pos, center);
+                // Create circle texture for node
+                int resolution = 64;
+                sharedNodeTexture = new Texture2D(resolution, resolution);
 
-                    if (distance <= radius)
+                Vector2 center = new Vector2(resolution / 2f, resolution / 2f);
+                float radius = resolution / 2f - 1f;
+
+                for (int x = 0; x < resolution; x++)
+                {
+                    for (int y = 0; y < resolution; y++)
                     {
-                        nodeTexture.SetPixel(x, y, Color.white);
-                    }
-                    else
-                    {
-                        nodeTexture.SetPixel(x, y, Color.clear);
+                        Vector2 pos = new Vector2(x, y);
+                        float distance = Vector2.Distance(pos, center);
+
+                        if (distance <= radius)
+                        {
+                            sharedNodeTexture.SetPixel(x, y, Color.white);
+                        }
+                        else
+                        {
+                            sharedNodeTexture.SetPixel(x, y, Color.clear);
+                        }
                     }
                 }
+
+                sharedNodeTexture.Apply();
             }
 
-            nodeTexture.Apply();
+            textureReferenceCount++;
 
             return Sprite.Create(
-                nodeTexture,
-                new Rect(0, 0, resolution, resolution),
+                sharedNodeTexture,
+                new Rect(0, 0, sharedNodeTexture.width, sharedNodeTexture.height),
                 new Vector2(0.5f, 0.5f)
             );
         }
@@ -122,10 +130,12 @@ namespace EvolutionSimulator.Creatures.Core
 
         void OnDestroy()
         {
-            if (nodeTexture != null)
+            textureReferenceCount--;
+            if (textureReferenceCount <= 0 && sharedNodeTexture != null)
             {
-                Destroy(nodeTexture);
-                nodeTexture = null;
+                Destroy(sharedNodeTexture);
+                sharedNodeTexture = null;
+                textureReferenceCount = 0;
             }
         }
 

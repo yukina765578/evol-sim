@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using EvolutionSimulator.Creatures.Core;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace EvolutionSimulator.Creatures.Population
 {
@@ -41,6 +42,10 @@ namespace EvolutionSimulator.Creatures.Population
 
         private Spawner spawner;
         private List<GameObject> creatures = new List<GameObject>();
+
+        private Dictionary<GameObject, UnityAction> creatureDeathActions =
+            new Dictionary<GameObject, UnityAction>();
+
         private float spawnTimer = 0f;
 
         public List<GameObject> Creatures => new List<GameObject>(creatures);
@@ -67,7 +72,6 @@ namespace EvolutionSimulator.Creatures.Population
         {
             HandleAutoSpawning();
 
-            // log debug infor every 5 sec
             if (Time.time % 5 < Time.deltaTime)
             {
                 EventDebugger.LogCounts();
@@ -134,7 +138,9 @@ namespace EvolutionSimulator.Creatures.Population
                 Energy energy = creature.GetComponent<Energy>();
                 if (energy != null)
                 {
-                    energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
+                    UnityAction deathAction = () => OnCreatureDeath(creature);
+                    energy.OnDeath.AddListener(deathAction);
+                    creatureDeathActions[creature] = deathAction;
                     EventDebugger.CreatureDeathListeners++;
                 }
 
@@ -151,13 +157,18 @@ namespace EvolutionSimulator.Creatures.Population
         {
             creatures.Remove(creature);
             totalCreatureDeaths++;
-            // remove event listener
+
             Energy energy = creature.GetComponent<Energy>();
-            if (energy != null)
+            if (
+                energy != null
+                && creatureDeathActions.TryGetValue(creature, out UnityAction deathAction)
+            )
             {
-                energy.OnDeath.RemoveListener(() => OnCreatureDeath(creature));
+                energy.OnDeath.RemoveListener(deathAction);
+                creatureDeathActions.Remove(creature);
                 EventDebugger.CreatureDeathListeners--;
             }
+
             if (logDeaths)
             {
                 Debug.Log(
@@ -173,7 +184,9 @@ namespace EvolutionSimulator.Creatures.Population
                 Energy energy = creature.GetComponent<Energy>();
                 if (energy != null)
                 {
-                    energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
+                    UnityAction deathAction = () => OnCreatureDeath(creature);
+                    energy.OnDeath.AddListener(deathAction);
+                    creatureDeathActions[creature] = deathAction;
                     EventDebugger.CreatureDeathListeners++;
                 }
 
@@ -187,10 +200,23 @@ namespace EvolutionSimulator.Creatures.Population
             foreach (GameObject creature in creatures)
             {
                 if (creature != null)
+                {
+                    Energy energy = creature.GetComponent<Energy>();
+                    if (
+                        energy != null
+                        && creatureDeathActions.TryGetValue(creature, out UnityAction deathAction)
+                    )
+                    {
+                        energy.OnDeath.RemoveListener(deathAction);
+                        creatureDeathActions.Remove(creature);
+                        EventDebugger.CreatureDeathListeners--;
+                    }
                     DestroyImmediate(creature);
+                }
             }
 
             creatures.Clear();
+            creatureDeathActions.Clear(); // ✅ Clear the dictionary
 
             if (showSpawnProgress)
             {
@@ -208,6 +234,7 @@ namespace EvolutionSimulator.Creatures.Population
             GUILayout.Label($"Active Creatures: {creatures.Count}");
             GUILayout.Label($"Total Spawned: {totalCreatureSpawned}");
             GUILayout.Label($"Total Deaths: {totalCreatureDeaths}");
+            GUILayout.Label($"Death Listeners: {EventDebugger.CreatureDeathListeners}");
             GUILayout.EndArea();
         }
 
@@ -216,6 +243,11 @@ namespace EvolutionSimulator.Creatures.Population
             initialPopulationSize = Mathf.Clamp(initialPopulationSize, 1, 1000);
             maxPopulationSize = Mathf.Clamp(maxPopulationSize, initialPopulationSize, 1000);
             spawnInterval = Mathf.Max(0.1f, spawnInterval);
+        }
+
+        void OnDestroy()
+        {
+            ClearPopulation();
         }
     }
 }

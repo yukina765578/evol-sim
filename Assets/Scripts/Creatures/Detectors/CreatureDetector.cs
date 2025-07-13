@@ -13,6 +13,8 @@ namespace EvolutionSimulator.Creatures.Detectors
         private CircleCollider2D detector;
         private bool isReproductionReady = false;
 
+        private UnityAction reproductionChangedAction;
+
         public UnityEvent<Controller> OnCreatureDetected = new UnityEvent<Controller>();
 
         void Awake()
@@ -26,8 +28,10 @@ namespace EvolutionSimulator.Creatures.Detectors
                 return;
             }
 
-            creatureEnergy.OnReproductionReadyChanged.AddListener(HandleReproductionChanged);
+            reproductionChangedAction = HandleReproductionChanged;
+            creatureEnergy.OnReproductionReadyChanged.AddListener(reproductionChangedAction);
             EventDebugger.ReproductionListeners++;
+
             creatureLayerMask = 1 << LayerMask.NameToLayer("Creatures");
         }
 
@@ -55,6 +59,9 @@ namespace EvolutionSimulator.Creatures.Detectors
 
         void HandleReproductionChanged()
         {
+            if (creatureEnergy == null)
+                return;
+
             isReproductionReady = creatureEnergy.IsReproductionReady;
             if (detector != null)
                 detector.enabled = isReproductionReady;
@@ -62,7 +69,7 @@ namespace EvolutionSimulator.Creatures.Detectors
 
         void OnTriggerEnter2D(Collider2D other)
         {
-            if (!creatureEnergy.IsAlive || !isReproductionReady)
+            if (creatureEnergy == null || !creatureEnergy.IsAlive || !isReproductionReady)
                 return;
 
             // Prevent self-detection
@@ -81,6 +88,7 @@ namespace EvolutionSimulator.Creatures.Detectors
                 || !partnerEnergy.IsReproductionReady
             )
                 return;
+
             // Check if the detected creature is alive and ready for reproduction
             OnCreatureDetected?.Invoke(detectedCreature);
         }
@@ -97,9 +105,9 @@ namespace EvolutionSimulator.Creatures.Detectors
 
         void OnDestroy()
         {
-            if (creatureEnergy != null)
+            if (creatureEnergy != null && reproductionChangedAction != null)
             {
-                creatureEnergy.OnReproductionReadyChanged.RemoveListener(HandleReproductionChanged);
+                creatureEnergy.OnReproductionReadyChanged.RemoveListener(reproductionChangedAction);
                 EventDebugger.ReproductionListeners--;
             }
         }
