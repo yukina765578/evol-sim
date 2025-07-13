@@ -14,6 +14,7 @@ namespace EvolutionSimulator.Creatures.Core
         private float age = 0f;
         private float maxAge = 300f; // 5 minutes
         private float reproductionThreshold = 80f;
+        private bool reproductionReady = false;
 
         private bool isAlive = true;
         private int segmentCount = 0;
@@ -30,6 +31,7 @@ namespace EvolutionSimulator.Creatures.Core
         private Controller controller;
 
         public UnityEvent OnDeath = new UnityEvent();
+        public UnityEvent OnReproductionReadyChanged = new UnityEvent();
 
         public bool IsAlive => isAlive;
 
@@ -100,6 +102,20 @@ namespace EvolutionSimulator.Creatures.Core
                 OnDeath.Invoke();
                 isAlive = false;
                 controller.HandleDeath("age");
+            }
+        }
+
+        void CheckReproduction()
+        {
+            if (currentEnergy >= reproductionThreshold && !reproductionReady)
+            {
+                reproductionReady = true;
+                OnReproductionReadyChanged.Invoke();
+            }
+            else if (currentEnergy < reproductionThreshold && reproductionReady)
+            {
+                reproductionReady = false;
+                OnReproductionReadyChanged.Invoke();
             }
         }
     }
