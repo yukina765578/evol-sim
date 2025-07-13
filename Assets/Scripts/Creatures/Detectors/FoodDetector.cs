@@ -1,3 +1,4 @@
+using EvolutionSimulator.Creatures.Core;
 using EvolutionSimulator.Environment;
 using UnityEngine;
 
@@ -5,21 +6,27 @@ namespace EvolutionSimulator.Creatures.Detectors
 {
     public class FoodDetector : MonoBehaviour
     {
+        [Header("Detection Settings")]
+        [SerializeField]
         private float detectionRadius = 1f;
 
+        [SerializeField]
         private LayerMask foodLayerMask = -1;
 
-        private Core.Energy creatureEnergy;
+        [SerializeField]
+        private Color debugColor = Color.green;
+
+        private Energy creatureEnergy;
         private CircleCollider2D detector;
 
         void Awake()
         {
             SetupCollider();
-            creatureEnergy = GetComponentInParent<Core.Energy>();
+            creatureEnergy = GetComponentInParent<Energy>();
 
             if (creatureEnergy == null)
             {
-                Debug.LogError("FoodDetector requires Energy component in parent!");
+                Debug.LogError("FoodDetector requires CreatureEnergy component in parent!");
             }
         }
 
@@ -35,11 +42,8 @@ namespace EvolutionSimulator.Creatures.Detectors
 
         void OnTriggerEnter2D(Collider2D other)
         {
+            Debug.Log($"FoodDetector triggered by: {other.name}");
             if (!creatureEnergy.IsAlive)
-                return;
-
-            int otherLayer = 1 << other.gameObject.layer;
-            if ((foodLayerMask & otherLayer) == 0)
                 return;
 
             FoodItem foodItem = other.GetComponent<FoodItem>();
@@ -56,6 +60,7 @@ namespace EvolutionSimulator.Creatures.Detectors
 
             float energyGained = foodItem.EnergyValue;
             creatureEnergy.AddEnergy(energyGained);
+
             foodItem.ConsumeFood(gameObject);
         }
 

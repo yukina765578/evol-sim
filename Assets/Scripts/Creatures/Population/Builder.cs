@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using EvolutionSimulator.Creatures.Biology;
 using EvolutionSimulator.Creatures.Core;
+using EvolutionSimulator.Creatures.Detectors;
 using EvolutionSimulator.Creatures.Genetics;
 using UnityEngine;
 
@@ -28,6 +30,16 @@ namespace EvolutionSimulator.Creatures.Population
                 Debug.LogWarning("Create 'Creature' tag in Tag Manager");
             }
 
+            int creatureLayer = LayerMask.NameToLayer("Creatures");
+            if (creatureLayer == -1)
+            {
+                Debug.LogWarning("Create 'Creature' layer in Layer Manager");
+            }
+            else
+            {
+                creatureObj.layer = creatureLayer;
+            }
+
             // Add physics component
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
@@ -43,7 +55,7 @@ namespace EvolutionSimulator.Creatures.Population
             if (nodes.Count > 0)
             {
                 nodes[0].gameObject.AddComponent<FoodDetector>();
-                nodes[0].gameObject.AddComponent<ReproductionDetector>();
+                nodes[0].gameObject.AddComponent<CreatureDetector>();
             }
 
             // Add controller last (after body is built)

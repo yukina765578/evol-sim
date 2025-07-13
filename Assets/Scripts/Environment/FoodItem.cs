@@ -21,6 +21,7 @@ namespace EvolutionSimulator.Environment
         private FoodSpawner parentSpawner;
         private SpriteRenderer spriteRenderer;
         private CircleCollider2D foodCollider;
+        private Rigidbody2D foodRigidbody;
         private bool isConsumed = false;
 
         public float EnergyValue => energyValue;
@@ -28,8 +29,36 @@ namespace EvolutionSimulator.Environment
 
         void Awake()
         {
+            SetupLayer();
+            SetupRigidbody();
             SetupVisuals();
             SetupCollider();
+        }
+
+        void SetupLayer()
+        {
+            int foodLayer = LayerMask.NameToLayer("Food");
+            if (foodLayer == -1)
+            {
+                Debug.LogError(
+                    "Food layer not found! Please create a 'Food' layer in the project settings."
+                );
+            }
+            else
+            {
+                gameObject.layer = foodLayer;
+            }
+        }
+
+        void SetupRigidbody()
+        {
+            foodRigidbody = GetComponent<Rigidbody2D>();
+            if (foodRigidbody == null)
+            {
+                foodRigidbody = gameObject.AddComponent<Rigidbody2D>();
+            }
+            foodRigidbody.bodyType = RigidbodyType2D.Kinematic;
+            foodRigidbody.gravityScale = 0f;
         }
 
         void SetupVisuals()
@@ -60,7 +89,6 @@ namespace EvolutionSimulator.Environment
 
         Sprite CreateCircleSprite()
         {
-            // Use Unity's built-in circle sprite
             return Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
         }
 
@@ -69,19 +97,6 @@ namespace EvolutionSimulator.Environment
             energyValue = energy;
             parentSpawner = spawner;
             isConsumed = false;
-        }
-
-        void OnTriggerEnter2D(Collider2D other)
-        {
-            // Only auto-consume if enabled (disabled by default now)
-            if (!enableAutoConsumption || isConsumed)
-                return;
-
-            // Check if the colliding object can consume food
-            if (other.CompareTag("Creature") || other.name.Contains("Motor"))
-            {
-                ConsumeFood(other.gameObject);
-            }
         }
 
         public void ConsumeFood(GameObject consumer)

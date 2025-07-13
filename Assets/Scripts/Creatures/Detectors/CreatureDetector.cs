@@ -8,11 +8,11 @@ namespace EvolutionSimulator.Creatures.Detectors
         private float detectionRadius = 3f;
         private LayerMask creatureLayerMask = -1;
 
-        public UnityEvent<GameObject> OnCreatureDetected = new UnityEvent<GameObject>();
-
         private Core.Energy creatureEnergy;
         private CircleCollider2D detector;
         private bool isReproductionReady = false;
+
+        public UnityEvent<GameObject> OnCreatureDetected = new UnityEvent<GameObject>();
 
         void Awake()
         {
@@ -39,11 +39,11 @@ namespace EvolutionSimulator.Creatures.Detectors
             detector.enabled = false; // Start disabled
         }
 
-        void HandleReproductionChanged(bool isReady)
+        void HandleReproductionChanged()
         {
-            isReproductionReady = isReady;
+            isReproductionReady = creatureEnergy.IsReproductionReady;
             if (detector != null)
-                detector.enabled = isReady;
+                detector.enabled = isReproductionReady;
         }
 
         void OnTriggerEnter2D(Collider2D other)

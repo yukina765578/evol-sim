@@ -148,6 +148,21 @@ namespace EvolutionSimulator.Creatures.Population
             }
         }
 
+        public void RegisterExistingCreature(GameObject creature)
+        {
+            if (creature != null && !creatures.Contains(creature))
+            {
+                Energy energy = creature.GetComponent<Energy>();
+                if (energy != null)
+                {
+                    energy.OnDeath.AddListener(() => OnCreatureDeath(creature));
+                }
+
+                creatures.Add(creature);
+                totalCreatureSpawned++;
+            }
+        }
+
         public void ClearPopulation()
         {
             foreach (GameObject creature in creatures)

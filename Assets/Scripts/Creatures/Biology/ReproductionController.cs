@@ -22,26 +22,19 @@ namespace EvolutionSimulator.Creatures.Biology
         {
             populationManager = FindFirstObjectByType<Manager>();
             creatureEnergy = GetComponent<Energy>();
-            creatureDetector = GetComponentInChildren<CreatureDetector>();
 
             if (populationManager == null)
                 Debug.LogError("ReproductionController requires Manager in scene!");
             if (creatureEnergy == null)
                 Debug.LogError("ReproductionController requires Energy component!");
-            if (creatureDetector == null)
-                Debug.LogError("ReproductionController requires CreatureDetector component!");
         }
 
         void Start()
         {
+            creatureDetector = GetComponentInChildren<CreatureDetector>();
             if (creatureDetector != null)
             {
                 creatureDetector.OnCreatureDetected.AddListener(OnCreatureDetected);
-            }
-
-            if (creatureEnergy != null)
-            {
-                creatureEnergy.OnReproductionReadyChanged.AddListener(OnReproductionStateChanged);
             }
         }
 
@@ -106,11 +99,8 @@ namespace EvolutionSimulator.Creatures.Biology
 
             if (offspring != null)
             {
-                // Add to population manager's creature list
-                // Note: Manager component should have a RegisterExistingCreature method
-                // or we add directly to the internal list
+                populationManager.RegisterExistingCreature(offspring);
 
-                // Consume reproduction energy from both parents
                 creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
                 partner.GetComponent<Energy>().ConsumeEnergy(reproductionEnergyCost);
 
@@ -150,14 +140,6 @@ namespace EvolutionSimulator.Creatures.Biology
             if (creatureDetector != null)
             {
                 creatureDetector.OnCreatureDetected.RemoveListener(OnCreatureDetected);
-            }
-
-            // Note: Ensure Energy component properly implements OnReproductionReadyChanged
-            if (creatureEnergy != null)
-            {
-                creatureEnergy.OnReproductionReadyChanged.RemoveListener(
-                    OnReproductionStateChanged
-                );
             }
         }
 

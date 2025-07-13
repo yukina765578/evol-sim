@@ -31,6 +31,8 @@ namespace EvolutionSimulator.Creature
             {
                 Debug.LogError("FoodDetector requires CreatureEnergy component in parent!");
             }
+
+            foodLayerMask = 1 << LayerMask.NameToLayer("Food");
         }
 
         void SetupCollider()
@@ -45,8 +47,9 @@ namespace EvolutionSimulator.Creature
 
         void OnTriggerEnter2D(Collider2D other)
         {
+            Debug.Log($"FoodDetector triggered by: {other.name}");
             if (!creatureEnergy.IsAlive)
-                return; // Only check age, not energy
+                return;
 
             FoodItem foodItem = other.GetComponent<FoodItem>();
             if (foodItem != null && !foodItem.IsConsumed)
