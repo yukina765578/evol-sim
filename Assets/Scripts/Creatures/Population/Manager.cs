@@ -72,10 +72,10 @@ namespace EvolutionSimulator.Creatures.Population
         {
             HandleAutoSpawning();
 
-            if (Time.time % 5 < Time.deltaTime)
-            {
-                EventDebugger.LogCounts();
-            }
+            // if (Time.time % 5 < Time.deltaTime)
+            // {
+            //     EventDebugger.LogCounts();
+            // }
         }
 
         void HandleAutoSpawning()

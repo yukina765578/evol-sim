@@ -527,6 +527,7 @@ GameObject:
   - component: {fileID: 1348387817}
   - component: {fileID: 1348387818}
   - component: {fileID: 1348387819}
+  - component: {fileID: 1348387823}
   - component: {fileID: 1348387820}
   - component: {fileID: 1348387821}
   - component: {fileID: 1348387822}
@@ -564,8 +565,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 250
-  height: 250
+  width: 300
+  height: 300
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -579,7 +580,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 
@@ -595,15 +596,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   maxFoodPerCell: 5
   foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
-  energyValue: 5
-  respawnDelay: 20
+  energyValue: 1
+  respawnDelay: 0.1
   enableDebugLogging: 0
 --- !u!114 &1348387820
 MonoBehaviour:
@@ -621,7 +622,7 @@ MonoBehaviour:
     scale: 100
     threshold: 0.1
     offset: {x: 0, y: 0}
-    animate: 0
+    animate: 1
     animationSpeed: 0.1
     contrast: 2
     gridWidth: 50
@@ -639,13 +640,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 100
-  maxPopulationSize: 200
+  initialPopulationSize: 200
+  maxPopulationSize: 400
   spawnOnStart: 1
   enableAutoSpawn: 0
   spawnInterval: 1
@@ -660,7 +661,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 668392226cfeb724bbeb83c4d8c73dc3, type: 3}
   m_Name: 
@@ -668,6 +669,25 @@ MonoBehaviour:
   enableWrapping: 1
   wrapBuffer: 1
   showWrapEvents: 0
+--- !u!114 &1348387823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1348387814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f521b9cbf91e7e74dbde681fe9b39ca1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  energyValue: 10
+  respawnDelay: 5
+  maxFoodPerCell: 3
+  foodColor: {r: 0, g: 1, b: 0, a: 1}
+  foodSize: 0.5
+  gridResolution: 50
+  detectionRadius: 1
 --- !u!1 &1472847868
 GameObject:
   m_ObjectHideFlags: 0
