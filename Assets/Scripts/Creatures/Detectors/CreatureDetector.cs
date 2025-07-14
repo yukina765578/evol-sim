@@ -91,6 +91,7 @@ namespace EvolutionSimulator.Creatures.Detectors
 
             // Check if the detected creature is alive and ready for reproduction
             OnCreatureDetected?.Invoke(detectedCreature);
+            return;
         }
 
         void OnValidate()

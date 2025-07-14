@@ -564,8 +564,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 500
-  height: 500
+  width: 250
+  height: 250
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -600,10 +600,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxFoodPerCell: 15
+  maxFoodPerCell: 5
   foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
   energyValue: 5
-  respawnDelay: 1
+  respawnDelay: 20
   enableDebugLogging: 0
 --- !u!114 &1348387820
 MonoBehaviour:
@@ -644,11 +644,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 50
-  maxPopulationSize: 400
+  initialPopulationSize: 100
+  maxPopulationSize: 200
   spawnOnStart: 1
   enableAutoSpawn: 0
-  spawnInterval: 5
+  spawnInterval: 1
   totalCreatureSpawned: 0
   totalCreatureDeaths: 0
   showSpawnProgress: 1

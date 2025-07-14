@@ -89,15 +89,11 @@ namespace EvolutionSimulator.Creatures.Population
                 spawnTimer = 0f;
                 if (creatures.Count < initialPopulationSize)
                 {
-                    GameObject creature = spawner.SpawnCreature();
+                    GameObject creature = SpawnSingleCreature();
 
                     if (showSpawnProgress)
                     {
                         Debug.Log($"Spawned creature {creatures.Count}/{initialPopulationSize}");
-                    }
-                    if (creature != null)
-                    {
-                        RegisterExistingCreature(creature);
                     }
                 }
             }
@@ -124,7 +120,7 @@ namespace EvolutionSimulator.Creatures.Population
             }
         }
 
-        GameObject SpawnSingleCreature(string creatureName = null)
+        public GameObject SpawnSingleCreature(string creatureName = null)
         {
             if (creatures.Count >= maxPopulationSize)
                 return null;
