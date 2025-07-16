@@ -305,7 +305,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!114 &519420030
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -601,11 +601,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxFoodPerCell: 5
-  foodPrefab: {fileID: 1712713663677051260, guid: 8aa13667858bdb84890f948ecd969e1d, type: 3}
-  energyValue: 1
-  respawnDelay: 0.1
-  enableDebugLogging: 0
 --- !u!114 &1348387820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -622,7 +617,7 @@ MonoBehaviour:
     scale: 100
     threshold: 0.1
     offset: {x: 0, y: 0}
-    animate: 1
+    animate: 0
     animationSpeed: 0.1
     contrast: 2
     gridWidth: 50
@@ -640,13 +635,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   initialPopulationSize: 200
-  maxPopulationSize: 400
+  maxPopulationSize: 617
   spawnOnStart: 1
   enableAutoSpawn: 0
   spawnInterval: 1
@@ -661,7 +656,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 668392226cfeb724bbeb83c4d8c73dc3, type: 3}
   m_Name: 
@@ -684,8 +679,9 @@ MonoBehaviour:
   energyValue: 10
   respawnDelay: 5
   maxFoodPerCell: 3
-  foodColor: {r: 0, g: 1, b: 0, a: 1}
-  foodSize: 0.5
+  foodSize: 1
+  foodMaterial: {fileID: 2100000, guid: 09d148cc788c59644b890c57c760eb8d, type: 2}
+  foodMesh: {fileID: 0}
   gridResolution: 50
   detectionRadius: 1
 --- !u!1 &1472847868
@@ -717,34 +713,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7dcb5fdc19dbe444a834851fcaf0cc49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnOnStart: 1
-  spawnPosition: {x: 0, y: 0, z: 0}
-  testNodes:
-  - parentIndex: -1
-    baseAngle: 0
-    oscSpeed: 0
-    maxAngle: 0
-    forwardRatio: 0
-  - parentIndex: 0
-    baseAngle: 0
-    oscSpeed: 3
-    maxAngle: 45
-    forwardRatio: 0.2
-  - parentIndex: 0
-    baseAngle: 120
-    oscSpeed: 3.5
-    maxAngle: -45
-    forwardRatio: 0.6
-  - parentIndex: 1
-    baseAngle: 45
-    oscSpeed: 4
-    maxAngle: -60
-    forwardRatio: 0.5
-  - parentIndex: 2
-    baseAngle: 180
-    oscSpeed: 2.5
-    maxAngle: 120
-    forwardRatio: 0.3
 --- !u!4 &1472847870
 Transform:
   m_ObjectHideFlags: 0

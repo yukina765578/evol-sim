@@ -1,19 +1,9 @@
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace EvolutionSimulator.Environment
 {
-    [System.Serializable]
-    public struct FoodData
-    {
-        public Vector2 position;
-        public float energy;
-        public bool consumed;
-        public float respawnTimer;
-        public int gridX;
-        public int gridY;
-    }
-
     public class FoodManager : MonoBehaviour
     {
         [Header("Food Settings")]
@@ -26,12 +16,15 @@ namespace EvolutionSimulator.Environment
         [SerializeField]
         private int maxFoodPerCell = 3;
 
-        [Header("Rendering")]
-        [SerializeField]
-        private Color foodColor = Color.green;
-
         [SerializeField]
         private float foodSize = 0.5f;
+
+        [Header("Rendering")]
+        [SerializeField]
+        private Material foodMaterial;
+
+        [SerializeField]
+        private Mesh foodMesh;
 
         [Header("Collision Detection")]
         [SerializeField]
@@ -43,18 +36,19 @@ namespace EvolutionSimulator.Environment
         private FoodData[] foodItems;
         private int maxFoodCount;
         private int activeFoodCount;
-        private Matrix4x4[] renderMatrices;
         private List<int>[] spatialGrid;
         private Vector2 cellSize;
         private Bounds worldBounds;
 
-        private Material foodMaterial;
-        private Mesh foodMesh;
+        private GraphicsBuffer positionBuffer;
+        private Vector3[] positionArray; // Fixed-size array
+        private int visibleFoodCount = 0; // Track actual visible food count
+
         private NoiseManager noiseManager;
         private NoiseSettings noiseSettings;
 
-        public int ActiveFoodCount => activeFoodCount;
-        public int MaxFoodCount => maxFoodCount;
+        public int ActiveFoodCount => visibleFoodCount;
+        public float FoodEnergy => energyValue;
 
         void Awake()
         {
@@ -70,14 +64,23 @@ namespace EvolutionSimulator.Environment
 
         void Start()
         {
-            Debug.Log("FoodManager initialized with settings: " + noiseSettings);
             worldBounds = noiseManager.WorldBounds;
             cellSize = new Vector2(
                 worldBounds.size.x / gridResolution,
                 worldBounds.size.y / gridResolution
             );
+            CreateFoodMesh();
+
+            // Create fixed-size buffer and array
+            positionArray = new Vector3[maxFoodCount];
+            positionBuffer = new GraphicsBuffer(
+                GraphicsBuffer.Target.Structured,
+                maxFoodCount,
+                Marshal.SizeOf<Vector3>()
+            );
+
             InitialSpawn();
-            Debug.Log("Initial food spawn complete. Active food count: " + activeFoodCount);
+            UpdatePositionBuffer();
         }
 
         void Update()
@@ -91,17 +94,17 @@ namespace EvolutionSimulator.Environment
         {
             maxFoodCount = noiseSettings.gridWidth * noiseSettings.gridHeight * maxFoodPerCell;
             foodItems = new FoodData[maxFoodCount];
-            renderMatrices = new Matrix4x4[maxFoodCount];
             spatialGrid = new List<int>[gridResolution * gridResolution];
 
             for (int i = 0; i < spatialGrid.Length; i++)
                 spatialGrid[i] = new List<int>();
-
-            CreateFoodMesh();
         }
 
         void CreateFoodMesh()
         {
+            if (foodMesh != null)
+                return;
+
             foodMesh = new Mesh();
             Vector3[] vertices =
             {
@@ -124,10 +127,6 @@ namespace EvolutionSimulator.Environment
             foodMesh.triangles = triangles;
             foodMesh.uv = uv;
             foodMesh.RecalculateNormals();
-
-            foodMaterial = new Material(Shader.Find("Standard"));
-            foodMaterial.color = foodColor;
-            foodMaterial.enableInstancing = true;
         }
 
         void InitialSpawn()
@@ -143,6 +142,7 @@ namespace EvolutionSimulator.Environment
                         worldBounds.min.y
                             + (y + 0.5f) * (worldBounds.size.y / noiseSettings.gridHeight)
                     );
+
                     float noiseValue = PerlinNoise.SampleRaw(
                         cellCenter.x,
                         cellCenter.y,
@@ -150,6 +150,7 @@ namespace EvolutionSimulator.Environment
                         noiseSettings.offset,
                         noiseSettings.contrast
                     );
+
                     int spawnAttempts = Mathf.RoundToInt(noiseValue * maxFoodPerCell);
                     for (
                         int attempt = 0;
@@ -231,13 +232,13 @@ namespace EvolutionSimulator.Environment
 
                         if (Vector2.Distance(foodItems[index].position, position) <= radius)
                         {
-                            // Fix: Modify the actual array element, not a copy
                             var food = foodItems[index];
                             food.consumed = true;
                             food.respawnTimer = respawnDelay;
                             foodItems[index] = food;
 
                             energy = food.energy;
+                            UpdatePositionBuffer(); // Update immediately when consumed
                             return true;
                         }
                     }
@@ -248,6 +249,7 @@ namespace EvolutionSimulator.Environment
 
         void ProcessRespawns()
         {
+            bool needsUpdate = false;
             for (int i = 0; i < activeFoodCount; i++)
             {
                 if (foodItems[i].consumed)
@@ -265,11 +267,13 @@ namespace EvolutionSimulator.Environment
                             ),
                             cellSize
                         );
+                        needsUpdate = true;
                     }
-                    // Fix: Assign the modified struct back to the array
                     foodItems[i] = food;
                 }
             }
+            if (needsUpdate)
+                UpdatePositionBuffer();
         }
 
         void UpdateSpatialGrid()
@@ -288,40 +292,67 @@ namespace EvolutionSimulator.Environment
             }
         }
 
-        void RenderFood()
+        void UpdatePositionBuffer()
         {
-            int renderCount = 0;
+            visibleFoodCount = 0;
+
+            // Fill fixed-size array with visible food positions
             for (int i = 0; i < activeFoodCount; i++)
             {
                 if (!foodItems[i].consumed)
                 {
-                    renderMatrices[renderCount] = Matrix4x4.TRS(
-                        foodItems[i].position,
-                        Quaternion.identity,
-                        Vector3.one * foodSize
+                    positionArray[visibleFoodCount] = new Vector3(
+                        foodItems[i].position.x,
+                        foodItems[i].position.y,
+                        0
                     );
-                    renderCount++;
+                    visibleFoodCount++;
                 }
             }
-            Debug.Log($"Rendering {renderCount} food items");
 
-            if (renderCount > 0)
+            // Update buffer data only - never recreate
+            if (positionBuffer != null && visibleFoodCount > 0)
             {
-                Graphics.DrawMeshInstanced(foodMesh, 0, foodMaterial, renderMatrices, renderCount);
-                Debug.Log($"Drawn {renderCount} food items with color {foodColor}");
+                positionBuffer.SetData(positionArray);
             }
+        }
+
+        void RenderFood()
+        {
+            if (
+                foodMaterial == null
+                || foodMesh == null
+                || positionBuffer == null
+                || visibleFoodCount == 0
+            )
+                return;
+
+            foodMaterial.SetBuffer("_Positions", positionBuffer);
+            foodMaterial.SetFloat("_FoodSize", foodSize);
+
+            Graphics.DrawMeshInstancedProcedural(
+                foodMesh,
+                0,
+                foodMaterial,
+                new Bounds(Vector3.zero, worldBounds.size),
+                visibleFoodCount
+            );
         }
 
         void OnDestroy()
         {
-            if (foodMesh != null)
-            {
-                DestroyImmediate(foodMesh);
-            }
-            if (foodMaterial != null)
-            {
-                DestroyImmediate(foodMaterial);
-            }
+            positionBuffer?.Dispose();
         }
+    }
+
+    [System.Serializable]
+    public struct FoodData
+    {
+        public Vector2 position;
+        public float energy;
+        public bool consumed;
+        public float respawnTimer;
+        public int gridX;
+        public int gridY;
     }
 }

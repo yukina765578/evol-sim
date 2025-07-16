@@ -8,84 +8,60 @@ namespace EvolutionSimulator.Creatures.Detectors
     {
         [Header("Detection Settings")]
         [SerializeField]
-        private float detectionRadius = 1f;
-
-        [SerializeField]
-        private LayerMask foodLayerMask = -1;
-
-        [SerializeField]
-        private Color debugColor = Color.green;
+        private float detectionRadius = 2f;
 
         private Energy creatureEnergy;
-        private CircleCollider2D detector;
+        private FoodManager foodManager;
 
         void Awake()
         {
-            SetupCollider();
             creatureEnergy = GetComponentInParent<Energy>();
-
             if (creatureEnergy == null)
             {
-                Debug.LogError("FoodDetector requires CreatureEnergy component in parent!");
-            }
-            foodLayerMask = 1 << LayerMask.NameToLayer("Food");
-        }
-
-        void SetupCollider()
-        {
-            var colliders = GetComponents<CircleCollider2D>();
-            detector = null;
-
-            foreach (var col in colliders)
-            {
-                if (col.name == "FoodDetector")
-                {
-                    detector = col as CircleCollider2D;
-                    break;
-                }
-            }
-            if (detector == null)
-            {
-                detector = gameObject.AddComponent<CircleCollider2D>();
-                detector.name = "FoodDetector";
-            }
-
-            detector.isTrigger = true;
-            detector.radius = detectionRadius;
-            detector.enabled = true;
-        }
-
-        void OnTriggerEnter2D(Collider2D other)
-        {
-            if (!creatureEnergy.IsAlive)
-                return;
-
-            FoodItem foodItem = other.GetComponent<FoodItem>();
-            if (foodItem != null && !foodItem.IsConsumed)
-            {
-                ConsumeFood(foodItem);
+                Debug.LogError("Energy component not found in parent.");
             }
         }
 
-        void ConsumeFood(FoodItem foodItem)
+        void Start()
         {
-            if (foodItem.IsConsumed)
-                return;
+            foodManager = FindFirstObjectByType<FoodManager>();
+            if (foodManager == null)
+            {
+                Debug.LogError("FoodManager not found in the scene.");
+            }
+        }
 
-            float energyGained = foodItem.EnergyValue;
-            creatureEnergy.AddEnergy(energyGained);
+        void Update()
+        {
+            if (
+                creatureEnergy.IsAlive
+                && creatureEnergy.CurrentEnergy < creatureEnergy.MaxEnergy - foodManager.FoodEnergy
+            )
+            {
+                DetectFood();
+            }
+        }
 
-            foodItem.ConsumeFood(gameObject);
+        void DetectFood()
+        {
+            Vector2 position = transform.position;
+            if (foodManager.TryConsumeFood(position, detectionRadius, out float energyGained))
+            {
+                ConsumeFood(energyGained);
+            }
+        }
+
+        void ConsumeFood(float energyGained)
+        {
+            if (creatureEnergy != null)
+            {
+                creatureEnergy.AddEnergy(energyGained);
+            }
         }
 
         void OnValidate()
         {
             detectionRadius = Mathf.Max(0.1f, detectionRadius);
-
-            if (Application.isPlaying && detector != null)
-            {
-                detector.radius = detectionRadius;
-            }
         }
     }
 }

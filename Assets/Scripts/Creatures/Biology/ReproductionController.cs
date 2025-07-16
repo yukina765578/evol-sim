@@ -82,21 +82,7 @@ namespace EvolutionSimulator.Creatures.Biology
                     Debug.Log("Reproduction failed: Population at maximum");
                 return;
             }
-            //
-            // GameObject offspring = populationManager.SpawnSingleCreature("reproduction");
-            //
-            // if (offspring != null)
-            // {
-            //     if (creatureEnergy != null)
-            //         creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
-            //
-            //     Energy partnerEnergy = partner.GetComponent<Energy>();
-            //     if (partnerEnergy != null)
-            //         partnerEnergy.ConsumeEnergy(reproductionEnergyCost);
-            //
-            //     lastReproductionTime = Time.time;
-            //     isOnCooldown = true;
-            // }
+
             CreatureGenome parentGenome1 = ExtractGenomeFromCreature(gameObject);
             CreatureGenome parentGenome2 = ExtractGenomeFromCreature(partner);
 
