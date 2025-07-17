@@ -80,7 +80,7 @@ namespace EvolutionSimulator.Creatures.Core
             forwardRatio = nodeGene.forwardRatio;
             currentAngle = 0f;
             prevAngle = 0f;
-            thrustCoef = 15f;
+            thrustCoef = 30f;
         }
 
         public Vector2 GetThrustDirection(NodeData[] nodes)

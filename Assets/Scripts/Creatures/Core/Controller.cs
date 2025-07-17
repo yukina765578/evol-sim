@@ -48,16 +48,16 @@ namespace EvolutionSimulator.Creatures.Core
 
             creatureState = new CreatureState(nodeCount, segmentCount);
 
-            // Build nodes
+            // Build nodes with relative positions
             for (int i = 0; i < nodeCount; i++)
             {
-                Vector3 position = CalculateNodePosition(i);
+                Vector3 relativePosition = CalculateRelativeNodePosition(i);
                 bool isRoot = i == 0;
                 int parentIndex = isRoot ? -1 : genome.nodes[i].parentIndex;
 
                 creatureState.nodes[i] = new NodeData(
-                    position,
-                    position, // position, prevPosition
+                    relativePosition,
+                    relativePosition, // position, prevPosition
                     DataConstants.DEFAULT_NODE_SIZE,
                     DataConstants.DEFAULT_NODE_COLOR,
                     isRoot,
@@ -84,13 +84,14 @@ namespace EvolutionSimulator.Creatures.Core
             creatureState.Initialize();
         }
 
-        Vector3 CalculateNodePosition(int nodeIndex)
+        Vector3 CalculateRelativeNodePosition(int nodeIndex)
         {
+            // Root node is always at local origin
             if (nodeIndex == 0)
                 return Vector3.zero;
 
             NodeGene gene = genome.nodes[nodeIndex];
-            Vector3 parentPosition = CalculateNodePosition(gene.parentIndex);
+            Vector3 parentPosition = CalculateRelativeNodePosition(gene.parentIndex);
             float angle = gene.baseAngle * Mathf.Deg2Rad;
 
             Vector3 offset = new Vector3(
@@ -165,27 +166,6 @@ namespace EvolutionSimulator.Creatures.Core
         public int GetNodeCount() => creatureState.nodes.Length;
 
         public int GetSegmentCount() => creatureState.segments.Length;
-
-        void OnGUI()
-        {
-            if (!showCreatureInfo)
-                return;
-
-            GUILayout.BeginArea(new Rect(10, 100, 300, 150));
-            GUILayout.Label($"Swimming Creature: {name}");
-            GUILayout.Label($"Nodes: {GetNodeCount()} | Segments: {GetSegmentCount()}");
-            GUILayout.Label($"Velocity: {GetCurrentVelocity().magnitude:F2} m/s");
-            GUILayout.Label($"Efficiency: {GetMovementEfficiency():F2}");
-
-            if (energySystem != null)
-            {
-                GUILayout.Label(
-                    $"Energy: {energySystem.CurrentEnergy:F1}/{energySystem.MaxEnergy:F1}"
-                );
-                GUILayout.Label($"Reproduction Ready: {energySystem.IsReproductionReady}");
-            }
-            GUILayout.EndArea();
-        }
 
         void OnValidate()
         {

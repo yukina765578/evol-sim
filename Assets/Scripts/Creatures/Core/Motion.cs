@@ -63,19 +63,25 @@ namespace EvolutionSimulator.Creatures.Core
                 creatureState.segments[i] = segment;
             }
 
-            // Update node positions based on segment rotations
-            UpdateNodePositions();
+            // Update node positions - keep them relative to root
+            UpdateRelativeNodePositions();
 
-            // Calculate and apply forces
+            // Calculate and apply forces to the entire creature
             CalculateForces();
             ApplyForces();
 
-            // Update previous positions
+            // Update previous positions for next frame
             creatureState.UpdatePrevPositions();
         }
 
-        void UpdateNodePositions()
+        void UpdateRelativeNodePositions()
         {
+            // Root node always stays at local origin
+            var rootNode = creatureState.nodes[0];
+            rootNode.position = Vector3.zero;
+            creatureState.nodes[0] = rootNode;
+
+            // Update other nodes relative to their parents
             for (int i = 0; i < creatureState.segments.Length; i++)
             {
                 SegmentData segment = creatureState.segments[i];
@@ -89,6 +95,7 @@ namespace EvolutionSimulator.Creatures.Core
                 NodeData parentNode = creatureState.nodes[segment.parentIndex];
                 NodeData childNode = creatureState.nodes[segment.childIndex];
 
+                // Update child position relative to parent
                 Utils.UpdateNodePosition(ref childNode, parentNode, segment);
                 creatureState.nodes[segment.childIndex] = childNode;
             }
@@ -99,7 +106,7 @@ namespace EvolutionSimulator.Creatures.Core
             totalThrust = Vector2.zero;
             totalDrag = Vector2.zero;
             currentVelocity = rigidBody.linearVelocity;
-            float maxTotalDrag = currentVelocity.magnitude * 0.9f;
+            float maxTotalDrag = currentVelocity.magnitude * 0.5f;
             float dragPerSegment = maxTotalDrag / creatureState.segments.Length;
 
             for (int i = 0; i < creatureState.segments.Length; i++)
@@ -130,15 +137,19 @@ namespace EvolutionSimulator.Creatures.Core
 
         void ApplyForces()
         {
+            // Apply all forces to the creature's rigidbody (moves entire creature)
             if (totalThrust.magnitude > 0.01f)
                 rigidBody.AddForce(totalThrust, ForceMode2D.Force);
 
-            if (enableDrag && totalDrag.magnitude > 0.01f)
-                rigidBody.AddForce(totalDrag, ForceMode2D.Force);
+            // TODO: Work on drag application
+            // if (enableDrag && totalDrag.magnitude > 0.01f)
+            //     rigidBody.AddForce(totalDrag, ForceMode2D.Force);
 
-            Debug.Log($"Total Thrust: {totalThrust}, Total Drag: {totalDrag}");
             currentVelocity = rigidBody.linearVelocity;
-            Debug.Log($"Current Velocity: {currentVelocity}");
+
+            Debug.Log(
+                $"Total Thrust: {totalThrust}, Total Drag: {totalDrag}, Current Velocity: {currentVelocity}"
+            );
         }
 
         // Essential getters for force analysis

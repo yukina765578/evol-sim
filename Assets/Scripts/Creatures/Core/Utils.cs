@@ -55,11 +55,15 @@ namespace EvolutionSimulator.Creatures.Core
             if (segment.parentIndex >= nodes.Length || segment.childIndex >= nodes.Length)
                 return Vector2.zero;
 
-            Vector2 thrustDirection = segment.GetThrustDirection(nodes);
-            float angleChange = Mathf.Abs(segment.currentAngle - segment.prevAngle);
-            float thrustMagnitude = angleChange * segment.thrustCoef;
+            Vector2 parentMovement = nodes[segment.parentIndex].GetPositionDelta();
+            Vector2 childMovement = nodes[segment.childIndex].GetPositionDelta();
+            Vector2 thrust = (childMovement + parentMovement) / 2f;
+            Vector2 thrustDirection = -thrust.normalized;
 
-            return thrustDirection * thrustMagnitude;
+            float thrustMagnitude = thrust.magnitude * segment.thrustCoef;
+            Vector2 result = thrustDirection * thrustMagnitude;
+
+            return result;
         }
 
         public static Vector2 CalculateWaterDrag(

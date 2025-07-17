@@ -67,7 +67,7 @@ namespace EvolutionSimulator.Creatures.Core
                 LineRenderer line = lineObj.AddComponent<LineRenderer>();
                 line.material = segmentMatInstance;
                 line.positionCount = 2;
-                line.useWorldSpace = true;
+                line.useWorldSpace = false; // Use local space
                 line.sortingOrder = 0;
                 line.startWidth = creatureState.segments[i].width;
                 line.endWidth = creatureState.segments[i].width;
@@ -86,7 +86,7 @@ namespace EvolutionSimulator.Creatures.Core
             velocityRenderer = debugObj.AddComponent<LineRenderer>();
             velocityRenderer.material = debugMatInstance;
             velocityRenderer.positionCount = 2;
-            velocityRenderer.useWorldSpace = true;
+            velocityRenderer.useWorldSpace = false; // Use local space
             velocityRenderer.sortingOrder = 10;
             velocityRenderer.startWidth = 0.1f;
             velocityRenderer.endWidth = 0.1f;
@@ -120,9 +120,13 @@ namespace EvolutionSimulator.Creatures.Core
                     nodeColor = DataConstants.REPRODUCTION_COLOR;
                 }
 
+                // Use local position - transform handles world positioning
+                Vector3 localPosition = node.position;
+                Vector3 worldPosition = transform.TransformPoint(localPosition);
+
                 Matrix4x4 matrix = Matrix4x4.TRS(
-                    node.position,
-                    Quaternion.identity,
+                    worldPosition,
+                    transform.rotation,
                     Vector3.one * node.size
                 );
 
@@ -140,8 +144,10 @@ namespace EvolutionSimulator.Creatures.Core
                 if (segmentRenderers[i] == null)
                     continue;
 
+                // Use local positions - LineRenderer with useWorldSpace=false handles transform
                 Vector3 startPos = creatureState.nodes[segment.parentIndex].position;
                 Vector3 endPos = creatureState.nodes[segment.childIndex].position;
+
                 segmentRenderers[i].SetPosition(0, startPos);
                 segmentRenderers[i].SetPosition(1, endPos);
                 segmentRenderers[i].enabled = enableRendering;
@@ -155,9 +161,13 @@ namespace EvolutionSimulator.Creatures.Core
                 return;
 
             Vector2 velocity = rb.linearVelocity;
-            Vector3 rootPos = creatureState.nodes[0].position;
-            Vector3 startPos = rootPos + (Vector3)velocity.normalized * 1.2f;
-            Vector3 endPos = startPos + (Vector3)velocity * 2f;
+            Vector3 rootPos = creatureState.nodes[0].position; // This is (0,0,0) in local space
+
+            // Convert velocity from world space to local space for display
+            Vector2 localVelocity = transform.InverseTransformDirection(velocity);
+
+            Vector3 startPos = rootPos + (Vector3)localVelocity.normalized * 1.2f;
+            Vector3 endPos = startPos + (Vector3)localVelocity * 2f;
 
             velocityRenderer.SetPosition(0, startPos);
             velocityRenderer.SetPosition(1, endPos);
