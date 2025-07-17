@@ -1,3 +1,4 @@
+using EvolutionSimulator.Creatures.Core;
 using EvolutionSimulator.Creatures.Genetics;
 using EvolutionSimulator.Creatures.Population;
 using UnityEngine;
@@ -14,6 +15,16 @@ namespace EvolutionSimulator.Creatures.Test
         [SerializeField]
         private Vector3 spawnPosition = Vector3.zero;
 
+        [Header("Debug Options")]
+        [SerializeField]
+        private bool showCreatureStats = true;
+
+        [SerializeField]
+        private bool enableThrustDebug = false;
+
+        [SerializeField]
+        private bool enableVelocityDebug = false;
+
         [Header("Sample Genes")]
         [SerializeField]
         private NodeGene[] testNodes = new NodeGene[]
@@ -26,6 +37,8 @@ namespace EvolutionSimulator.Creatures.Test
         };
 
         private GameObject currentCreature;
+        private Controller currentController;
+        private CreatureStats currentStats;
 
         void Start()
         {
@@ -34,6 +47,12 @@ namespace EvolutionSimulator.Creatures.Test
         }
 
         void Update()
+        {
+            HandleInput();
+            UpdateStats();
+        }
+
+        void HandleInput()
         {
             if (Keyboard.current == null)
                 return;
@@ -49,6 +68,20 @@ namespace EvolutionSimulator.Creatures.Test
                 RandomizeNodes();
                 SpawnTestCreature();
             }
+
+            if (Keyboard.current.tKey.wasPressedThisFrame)
+                ToggleThrustDebug();
+
+            if (Keyboard.current.vKey.wasPressedThisFrame)
+                ToggleVelocityDebug();
+        }
+
+        void UpdateStats()
+        {
+            if (currentCreature != null)
+            {
+                currentStats = Builder.GetCreatureStats(currentCreature);
+            }
         }
 
         [ContextMenu("Spawn Test Creature")]
@@ -58,21 +91,50 @@ namespace EvolutionSimulator.Creatures.Test
 
             try
             {
+                // Create genome from test nodes
                 CreatureGenome genome = new CreatureGenome(testNodes);
+
+                // Use new Builder system - single GameObject
                 currentCreature = Builder.BuildCreature(genome, spawnPosition);
 
                 if (currentCreature != null)
                 {
-                    Debug.Log($"Spawned creature with {genome.NodeCount} nodes at {spawnPosition}");
+                    currentController = currentCreature.GetComponent<Controller>();
+
+                    // Apply debug settings
+                    if (currentController != null)
+                    {
+                        // Set debug modes through inspector or directly
+                        var renderSystem = currentCreature.GetComponent<RenderSystem>();
+                        if (renderSystem != null)
+                        {
+                            renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                        }
+                    }
+
+                    // Validate the creature
+                    if (Builder.ValidateCreature(currentCreature))
+                    {
+                        Debug.Log(
+                            $"✅ Successfully spawned creature with {genome.NodeCount} nodes at {spawnPosition}"
+                        );
+                        Debug.Log(
+                            $"📊 Creature has {currentController.GetNodeCount()} nodes and {currentController.GetSegmentCount()} segments"
+                        );
+                    }
+                    else
+                    {
+                        Debug.LogError("❌ Creature validation failed!");
+                    }
                 }
                 else
                 {
-                    Debug.LogError("Failed to create creature - Builder returned null");
+                    Debug.LogError("❌ Failed to create creature - Builder returned null");
                 }
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error spawning creature: {e.Message}");
+                Debug.LogError($"❌ Error spawning creature: {e.Message}\n{e.StackTrace}");
             }
         }
 
@@ -83,7 +145,8 @@ namespace EvolutionSimulator.Creatures.Test
             {
                 DestroyImmediate(currentCreature);
                 currentCreature = null;
-                Debug.Log("Cleared current creature");
+                currentController = null;
+                Debug.Log("🧹 Cleared current creature");
             }
         }
 
@@ -92,46 +155,156 @@ namespace EvolutionSimulator.Creatures.Test
         {
             try
             {
-                testNodes = Randomizer.GenerateRandomGenome().nodes;
-                Debug.Log($"Generated random genome with {testNodes.Length} nodes");
+                CreatureGenome randomGenome = Randomizer.GenerateRandomGenome();
+                testNodes = randomGenome.nodes;
+                Debug.Log($"🎲 Generated random genome with {testNodes.Length} nodes");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error generating random genome: {e.Message}");
+                Debug.LogError($"❌ Error generating random genome: {e.Message}");
+            }
+        }
+
+        [ContextMenu("Test Performance")]
+        public void TestPerformance()
+        {
+            if (currentCreature == null)
+            {
+                Debug.LogWarning("⚠️ No creature to test performance on");
+                return;
+            }
+
+            // Test GameObject count reduction
+            int gameObjectCount = currentCreature.transform.childCount + 1;
+            Debug.Log($"📈 Performance Test:");
+            Debug.Log(
+                $"   GameObject Count: {gameObjectCount} (vs ~{testNodes.Length * 2} in old system)"
+            );
+            Debug.Log(
+                $"   Reduction: {(1f - (float)gameObjectCount / (testNodes.Length * 2f)) * 100f:F1}%"
+            );
+
+            // Test memory efficiency
+            if (currentController != null)
+            {
+                Debug.Log($"   Memory: Using data structures instead of MonoBehaviour components");
+                Debug.Log(
+                    $"   Systems: {currentCreature.GetComponents<MonoBehaviour>().Length} components total"
+                );
+            }
+        }
+
+        void ToggleThrustDebug()
+        {
+            enableThrustDebug = !enableThrustDebug;
+            if (currentCreature != null)
+            {
+                var renderSystem = currentCreature.GetComponent<RenderSystem>();
+                if (renderSystem != null)
+                {
+                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                }
+            }
+            Debug.Log($"🔧 Thrust Debug: {(enableThrustDebug ? "ON" : "OFF")}");
+        }
+
+        void ToggleVelocityDebug()
+        {
+            enableVelocityDebug = !enableVelocityDebug;
+            if (currentCreature != null)
+            {
+                var renderSystem = currentCreature.GetComponent<RenderSystem>();
+                if (renderSystem != null)
+                {
+                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                }
+            }
+            Debug.Log($"🔧 Velocity Debug: {(enableVelocityDebug ? "ON" : "OFF")}");
+        }
+
+        [ContextMenu("Clone Current Creature")]
+        public void CloneCreature()
+        {
+            if (currentCreature == null)
+            {
+                Debug.LogWarning("⚠️ No creature to clone");
+                return;
+            }
+
+            Vector3 clonePosition = spawnPosition + Vector3.right * 5f;
+            GameObject clone = Builder.CloneCreature(currentCreature, clonePosition);
+
+            if (clone != null)
+            {
+                Debug.Log($"👯 Cloned creature at {clonePosition}");
             }
         }
 
         void OnGUI()
         {
-            GUILayout.BeginArea(new Rect(10, 10, 300, 200));
+            GUILayout.BeginArea(new Rect(10, 10, 400, 300));
 
-            GUILayout.Label("Test Creature Controls:");
+            GUILayout.Label("🧬 Single GameObject Test Creature Controls:");
             GUILayout.Label("Space: Spawn Test Creature");
             GUILayout.Label("C: Clear Current Creature");
             GUILayout.Label("R: Randomize Nodes and Spawn");
+            GUILayout.Label("T: Toggle Thrust Debug");
+            GUILayout.Label("V: Toggle Velocity Debug");
 
             GUILayout.Space(10);
 
-            if (currentCreature != null)
+            if (currentCreature != null && showCreatureStats)
             {
-                GUILayout.Label($"Current Creature: {currentCreature.name}");
-                GUILayout.Label($"Node Count: {testNodes.Length}");
-                GUILayout.Label($"Position: {currentCreature.transform.position}");
+                GUILayout.Label($"🎯 Current Creature: {currentCreature.name}");
+                GUILayout.Label(
+                    $"📊 Nodes: {currentStats.nodeCount} | Segments: {currentStats.segmentCount}"
+                );
+                GUILayout.Label($"📍 Position: {currentCreature.transform.position}");
+                GUILayout.Label($"🏃 Velocity: {currentStats.velocity.magnitude:F2} m/s");
+                GUILayout.Label(
+                    $"⚡ Energy: {currentStats.currentEnergy:F1}/{currentStats.maxEnergy:F1}"
+                );
+                GUILayout.Label(
+                    $"💚 Reproduction Ready: {(currentStats.isReproductionReady ? "YES" : "NO")}"
+                );
+                GUILayout.Label($"🌍 Grounded: {(currentStats.isGrounded ? "YES" : "NO")}");
+                GUILayout.Label($"🎯 Efficiency: {currentStats.efficiency:F3}");
 
-                // Show creature health status
-                var energy =
-                    currentCreature.GetComponent<EvolutionSimulator.Creatures.Core.Energy>();
-                if (energy != null)
-                {
-                    GUILayout.Label("Status: Alive");
-                }
+                GUILayout.Space(5);
+                GUILayout.Label(
+                    $"🔧 Debug - Thrust: {(enableThrustDebug ? "ON" : "OFF")} | Velocity: {(enableVelocityDebug ? "ON" : "OFF")}"
+                );
+
+                // System status
+                var systems = currentCreature.GetComponents<MonoBehaviour>();
+                GUILayout.Label($"🖥️ Systems: {systems.Length} components");
+
+                // Performance info
+                int totalGameObjects = FindObjectsByType<GameObject>(
+                    FindObjectsSortMode.None
+                ).Length;
+                GUILayout.Label($"📈 Scene GameObjects: {totalGameObjects}");
             }
-            else
+            else if (currentCreature == null)
             {
-                GUILayout.Label("No creature spawned.");
+                GUILayout.Label("❌ No creature spawned.");
+                GUILayout.Label("Press Space to spawn a test creature");
             }
 
             GUILayout.EndArea();
+        }
+
+        void OnValidate()
+        {
+            // Update debug settings when changed in inspector
+            if (Application.isPlaying && currentCreature != null)
+            {
+                var renderSystem = currentCreature.GetComponent<RenderSystem>();
+                if (renderSystem != null)
+                {
+                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                }
+            }
         }
     }
 }

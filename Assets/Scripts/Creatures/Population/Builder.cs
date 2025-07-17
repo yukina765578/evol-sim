@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using EvolutionSimulator.Creatures.Biology;
 using EvolutionSimulator.Creatures.Core;
-using EvolutionSimulator.Creatures.Detectors;
 using EvolutionSimulator.Creatures.Genetics;
 using UnityEngine;
 
@@ -9,17 +7,30 @@ namespace EvolutionSimulator.Creatures.Population
 {
     public static class Builder
     {
-        private const float SEGMENT_LENGTH = 2f;
-        private const float NODE_SIZE = 1f;
-        private const float SEGMENT_WIDTH = 0.1f;
-        private static readonly Color NODE_COLOR = Color.blue;
-        private static readonly Color SEGMENT_COLOR = Color.white;
-
         public static GameObject BuildCreature(CreatureGenome genome, Vector3 position)
         {
+            // Create single GameObject for entire creature
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
 
+            // Set tag and layer safely
+            SetupGameObjectProperties(creatureObj);
+
+            // Add core physics component
+            SetupPhysics(creatureObj);
+
+            // Add biological systems
+            SetupBiology(creatureObj);
+
+            // Add main controller (this will create and coordinate all other systems)
+            var controller = creatureObj.AddComponent<Controller>();
+            controller.Initialize(genome);
+
+            return creatureObj;
+        }
+
+        static void SetupGameObjectProperties(GameObject creatureObj)
+        {
             // Set tag safely
             try
             {
@@ -27,145 +38,207 @@ namespace EvolutionSimulator.Creatures.Population
             }
             catch (UnityException)
             {
-                Debug.LogWarning("Create 'Creature' tag in Tag Manager");
+                Debug.LogWarning("Create 'Creature' tag in Tag Manager for better organization");
             }
 
+            // Set layer safely
             int creatureLayer = LayerMask.NameToLayer("Creatures");
             if (creatureLayer == -1)
             {
-                Debug.LogWarning("Create 'Creature' layer in Layer Manager");
+                Debug.LogWarning(
+                    "Create 'Creatures' layer in Layer Manager for better performance"
+                );
             }
             else
             {
                 creatureObj.layer = creatureLayer;
             }
+        }
 
-            // Add physics component
+        static void SetupPhysics(GameObject creatureObj)
+        {
+            // Add main physics body
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
+            rigidbody.drag = 0f;
+            rigidbody.angularDrag = 0f;
 
+            // Mass will be calculated based on creature size
+            rigidbody.mass = 1f; // Default mass, can be adjusted by systems
+        }
+
+        static void SetupBiology(GameObject creatureObj)
+        {
             // Add energy system
             var energy = creatureObj.AddComponent<Energy>();
 
+            // Add reproduction controller
             var reproductionController = creatureObj.AddComponent<ReproductionController>();
 
-            // Build creature body
-            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
-
-            SetupDetectioNode(nodes[0]);
-
-            // Add controller last (after body is built)
-            var controller = creatureObj.AddComponent<Controller>();
-            controller.Initialize(genome);
-
-            return creatureObj;
+            // Note: Detection systems are now handled by PhysicsSystem
+            // No need for separate detector GameObjects
         }
 
-        static void SetupDetectioNode(Node detectionNode)
-        {
-            GameObject nodeObj = detectionNode.gameObject;
-
-            // Add Kinematic Rigidbody2D to parent node
-            var nodeRigidbody = nodeObj.AddComponent<Rigidbody2D>();
-            nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
-            nodeRigidbody.gravityScale = 0f;
-
-            // Create separate child for food detection
-            GameObject foodDetectorObj = new GameObject("FoodDetector");
-            foodDetectorObj.transform.SetParent(nodeObj.transform);
-            foodDetectorObj.transform.localPosition = Vector3.zero;
-            foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
-            foodDetectorObj.AddComponent<FoodDetector>();
-
-            // Create separate child for creature detection
-            GameObject creatureDetectorObj = new GameObject("CreatureDetector");
-            creatureDetectorObj.transform.SetParent(nodeObj.transform);
-            creatureDetectorObj.transform.localPosition = Vector3.zero;
-            creatureDetectorObj.layer = LayerMask.NameToLayer("Creatures");
-            creatureDetectorObj.AddComponent<CreatureDetector>();
-        }
-
-        static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
+        // Factory method for creating creatures with specific properties
+        public static GameObject BuildCreatureWithProperties(
             CreatureGenome genome,
-            GameObject creatureObj
+            Vector3 position,
+            float scale = 1f,
+            bool enableReproduction = true
         )
         {
-            var nodes = new List<Node>();
-            var segments = new List<Segment>();
+            GameObject creature = BuildCreature(genome, position);
 
-            // Create root node
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
-            nodes.Add(rootNode);
-
-            // Create child nodes and segments
-            for (int i = 1; i < genome.NodeCount; i++)
+            // Apply scaling
+            if (scale != 1f)
             {
-                NodeGene nodeGenome = genome.nodes[i];
-                Node parentNode = nodes[nodeGenome.parentIndex];
-
-                // Calculate child position
-                float angle = nodeGenome.baseAngle * Mathf.Deg2Rad;
-                Vector3 nodePosition =
-                    parentNode.transform.localPosition
-                    + new Vector3(
-                        SEGMENT_LENGTH * Mathf.Cos(angle),
-                        SEGMENT_LENGTH * Mathf.Sin(angle),
-                        0
-                    );
-
-                // Create node and segment
-                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
-                nodes.Add(newNode);
-
-                Segment newSegment = CreateSegment(
-                    $"Segment_{i}",
-                    nodeGenome,
-                    parentNode,
-                    newNode,
-                    creatureObj.transform
-                );
-                segments.Add(newSegment);
+                creature.transform.localScale = Vector3.one * scale;
             }
 
-            return (nodes, segments);
+            // Configure reproduction
+            if (!enableReproduction)
+            {
+                var reproductionController = creature.GetComponent<ReproductionController>();
+                if (reproductionController != null)
+                {
+                    reproductionController.enabled = false;
+                }
+            }
+
+            return creature;
         }
 
-        static Node CreateNode(string name, Vector3 position, Transform parent)
+        // Factory method for creating test creatures
+        public static GameObject BuildTestCreature(Vector3 position)
         {
-            GameObject nodeObj = new GameObject(name);
-            nodeObj.transform.SetParent(parent);
-            nodeObj.transform.localPosition = position;
-
-            var node = nodeObj.AddComponent<Node>();
-            node.Initialize(NODE_SIZE, NODE_COLOR);
-            return node;
+            CreatureGenome testGenome = Randomizer.GenerateRandomGenome();
+            return BuildCreature(testGenome, position);
         }
 
-        static Segment CreateSegment(
-            string name,
-            NodeGene gene,
-            Node parentNode,
-            Node childNode,
-            Transform parent
+        // Factory method for creating creatures from parents (for reproduction)
+        public static GameObject BuildOffspring(
+            CreatureGenome parentGenome1,
+            CreatureGenome parentGenome2,
+            Vector3 position
         )
         {
-            GameObject segmentObj = new GameObject(name);
-            segmentObj.transform.SetParent(parent);
-
-            var segment = segmentObj.AddComponent<Segment>();
-            segment.Initialize(
-                SEGMENT_LENGTH,
-                SEGMENT_WIDTH,
-                SEGMENT_COLOR,
-                gene.oscSpeed,
-                gene.maxAngle,
-                gene.forwardRatio,
-                gene.baseAngle, // Fixed: Added missing baseAngle parameter
-                parentNode,
-                childNode
+            CreatureGenome offspringGenome = GeneticCrossover.CrossoverGenomes(
+                parentGenome1,
+                parentGenome2
             );
-
-            return segment;
+            return BuildCreature(offspringGenome, position);
         }
+
+        // Utility method to validate creature creation
+        public static bool ValidateCreature(GameObject creature)
+        {
+            if (creature == null)
+                return false;
+
+            var controller = creature.GetComponent<Controller>();
+            if (controller == null)
+            {
+                Debug.LogError("Creature missing Controller component!");
+                return false;
+            }
+
+            var rigidbody = creature.GetComponent<Rigidbody2D>();
+            if (rigidbody == null)
+            {
+                Debug.LogError("Creature missing Rigidbody2D component!");
+                return false;
+            }
+
+            var energy = creature.GetComponent<Energy>();
+            if (energy == null)
+            {
+                Debug.LogError("Creature missing Energy component!");
+                return false;
+            }
+
+            return true;
+        }
+
+        // Utility method to get creature stats
+        public static CreatureStats GetCreatureStats(GameObject creature)
+        {
+            var controller = creature.GetComponent<Controller>();
+            if (controller == null)
+                return default(CreatureStats);
+
+            var energy = creature.GetComponent<Energy>();
+
+            return new CreatureStats
+            {
+                nodeCount = controller.GetNodeCount(),
+                segmentCount = controller.GetSegmentCount(),
+                currentEnergy = energy?.CurrentEnergy ?? 0f,
+                maxEnergy = energy?.MaxEnergy ?? 0f,
+                velocity = controller.GetCurrentVelocity(),
+                efficiency = controller.GetMovementEfficiency(),
+                isGrounded = controller.IsGrounded(),
+                isReproductionReady = energy?.IsReproductionReady ?? false,
+            };
+        }
+
+        // Method to clone existing creature
+        public static GameObject CloneCreature(GameObject originalCreature, Vector3 position)
+        {
+            var controller = originalCreature.GetComponent<Controller>();
+            if (controller == null)
+            {
+                Debug.LogError("Cannot clone creature without Controller component!");
+                return null;
+            }
+
+            CreatureGenome genome = controller.GetGenome();
+            return BuildCreature(genome, position);
+        }
+
+        // Method to create creature from serialized data
+        public static GameObject BuildCreatureFromData(CreatureData data, Vector3 position)
+        {
+            // Convert serialized data back to genome
+            CreatureGenome genome = DataToGenome(data);
+            return BuildCreature(genome, position);
+        }
+
+        // Helper method to convert data to genome
+        static CreatureGenome DataToGenome(CreatureData data)
+        {
+            // Implementation depends on your serialization format
+            // This is a placeholder - implement based on your data structure
+            NodeGene[] nodes = new NodeGene[data.nodeCount];
+
+            // Convert data back to NodeGene array
+            // ... implementation depends on your data format
+
+            return new CreatureGenome(nodes);
+        }
+    }
+
+    // Helper struct for creature statistics
+    [System.Serializable]
+    public struct CreatureStats
+    {
+        public int nodeCount;
+        public int segmentCount;
+        public float currentEnergy;
+        public float maxEnergy;
+        public Vector2 velocity;
+        public float efficiency;
+        public bool isGrounded;
+        public bool isReproductionReady;
+    }
+
+    // Helper struct for creature serialization
+    [System.Serializable]
+    public struct CreatureData
+    {
+        public int nodeCount;
+        public int segmentCount;
+        public float[] nodePositions;
+        public float[] segmentAngles;
+        // Add other serializable data as needed
     }
 }
