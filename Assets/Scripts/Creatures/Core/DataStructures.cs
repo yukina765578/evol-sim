@@ -1,13 +1,13 @@
-using EvolitionSimulator.Creatures.Genetics;
+using EvolutionSimulator.Creatures.Genetics;
 using UnityEngine;
 
-namespace EvolitionSimulator.Creatures.Core
+namespace EvolutionSimulator.Creatures.Core
 {
     [System.Serializable]
     public class NodeData
     {
-        public Vector3 pos;
-        public Vector3 prePos;
+        public Vector3 position;
+        public Vector3 prevPosition;
         public float size;
         public Color color;
         public bool isRoot;
@@ -15,29 +15,29 @@ namespace EvolitionSimulator.Creatures.Core
 
         public NodeData(
             Vector3 pos,
-            Vector3 prePos,
-            float size,
-            Color color,
-            bool isRoot,
-            int parentIndex
+            Vector3 prevPos,
+            float nodeSize,
+            Color nodeColor,
+            bool root,
+            int parent
         )
         {
-            this.pos = pos;
-            this.prePos = prePos;
-            this.size = size;
-            this.color = color;
-            this.isRoot = isRoot;
-            this.parentIndex = parentIndex;
+            position = pos;
+            prevPosition = prevPos;
+            size = nodeSize;
+            color = nodeColor;
+            isRoot = root;
+            parentIndex = parent;
         }
 
         public Vector2 GetPositionDelta()
         {
-            return (Vector2)(pos - prePos);
+            return (Vector2)(position - prevPosition);
         }
 
         public void UpdatePreviousPosition()
         {
-            prePos = pos;
+            prevPosition = position;
         }
     }
 
@@ -53,34 +53,33 @@ namespace EvolitionSimulator.Creatures.Core
         // Motion parameters
         public float baseAngle;
         public float oscSpeed;
+        public float maxAngle;
         public float forwardRatio;
         public float currentAngle;
         public float prevAngle;
-
         public float thrustCoef;
 
         public SegmentData(
-            int parentIndex,
-            int childIndex,
-            float length,
-            float width,
-            Color color,
+            int parent,
+            int child,
+            float segmentLength,
+            float segmentWidth,
+            Color segmentColor,
             NodeGene nodeGene
         )
         {
-            this.parentIndex = parentIndex;
-            this.childIndex = childIndex;
-            this.length = length;
-            this.width = width;
-            this.color = color;
+            parentIndex = parent;
+            childIndex = child;
+            length = segmentLength;
+            width = segmentWidth;
+            color = segmentColor;
 
-            // Initialize motion parameters
             baseAngle = nodeGene.baseAngle;
             oscSpeed = nodeGene.oscSpeed;
+            maxAngle = nodeGene.maxAngle;
             forwardRatio = nodeGene.forwardRatio;
             currentAngle = 0f;
             prevAngle = 0f;
-
             thrustCoef = 15f;
         }
 
@@ -99,18 +98,23 @@ namespace EvolitionSimulator.Creatures.Core
             Vector2 direction = (childDelta + parentDelta).normalized;
             return -direction;
         }
-    }
 
-    public static GetDirection()
-    {
-        if (parentIndex < 0 || parentIndex >= nodes.Length || childIndex < 0 || childIndex >= nodes.Length)
-            return Vector2.zero;
-        
-        return (nodes[childIndex].pos - nodes[parentIndex].pos).normalized;
+        public Vector2 GetDirection(NodeData[] nodes)
+        {
+            if (
+                parentIndex < 0
+                || parentIndex >= nodes.Length
+                || childIndex < 0
+                || childIndex >= nodes.Length
+            )
+                return Vector2.zero;
+
+            return (nodes[childIndex].position - nodes[parentIndex].position).normalized;
+        }
     }
 
     [System.Serializable]
-    public struct CreatureData
+    public struct CreatureState
     {
         public NodeData[] nodes;
         public SegmentData[] segments;
@@ -137,16 +141,15 @@ namespace EvolitionSimulator.Creatures.Core
         {
             totalMass = nodes.Length;
 
-            // TODO: Maybe add weight to root node
             Vector3 massCenter = Vector3.zero;
             for (int i = 0; i < nodes.Length; i++)
             {
-                massCenter += nodes[i].pos;
+                massCenter += nodes[i].position;
             }
             centerOfMass = massCenter / nodes.Length;
         }
 
-        public void UpdateNodePositions()
+        public void UpdatePrevPositions()
         {
             for (int i = 0; i < nodes.Length; i++)
             {
@@ -165,5 +168,6 @@ namespace EvolitionSimulator.Creatures.Core
         public static readonly Color DEFAULT_NODE_COLOR = Color.blue;
         public static readonly Color DEFAULT_SEGMENT_COLOR = Color.white;
         public static readonly Color DEFAULT_ROOT_COLOR = Color.red;
+        public static readonly Color REPRODUCTION_COLOR = Color.red;
     }
 }

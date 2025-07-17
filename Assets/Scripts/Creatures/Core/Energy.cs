@@ -45,8 +45,18 @@ namespace EvolutionSimulator.Creatures.Core
 
         void Start()
         {
-            segmentCount = GetComponentsInChildren<Segment>().Length;
+            // Get segment count from new data system
             controller = GetComponent<Controller>();
+            if (controller != null)
+            {
+                segmentCount = controller.GetSegmentCount();
+            }
+            else
+            {
+                Debug.LogWarning("Energy component couldn't find Controller for segment count!");
+                segmentCount = 1; // Default fallback
+            }
+
             currentEnergy = maxEnergy / 2f;
         }
 

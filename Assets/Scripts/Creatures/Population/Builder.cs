@@ -57,14 +57,12 @@ namespace EvolutionSimulator.Creatures.Population
 
         static void SetupPhysics(GameObject creatureObj)
         {
-            // Add main physics body
+            // Add main physics body for swimming
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
-            rigidbody.gravityScale = 0f;
-            rigidbody.drag = 0f;
-            rigidbody.angularDrag = 0f;
-
-            // Mass will be calculated based on creature size
-            rigidbody.mass = 1f; // Default mass, can be adjusted by systems
+            rigidbody.gravityScale = 0f; // Swimming - no gravity
+            rigidbody.linearDamping = 0f;
+            rigidbody.angularDamping = 0f;
+            rigidbody.mass = 1f; // Default mass, adjusted by systems
         }
 
         static void SetupBiology(GameObject creatureObj)
@@ -74,9 +72,6 @@ namespace EvolutionSimulator.Creatures.Population
 
             // Add reproduction controller
             var reproductionController = creatureObj.AddComponent<ReproductionController>();
-
-            // Note: Detection systems are now handled by PhysicsSystem
-            // No need for separate detector GameObjects
         }
 
         // Factory method for creating creatures with specific properties
@@ -176,7 +171,7 @@ namespace EvolutionSimulator.Creatures.Population
                 maxEnergy = energy?.MaxEnergy ?? 0f,
                 velocity = controller.GetCurrentVelocity(),
                 efficiency = controller.GetMovementEfficiency(),
-                isGrounded = controller.IsGrounded(),
+                isGrounded = false, // Swimming creatures are never grounded
                 isReproductionReady = energy?.IsReproductionReady ?? false,
             };
         }
@@ -227,7 +222,7 @@ namespace EvolutionSimulator.Creatures.Population
         public float maxEnergy;
         public Vector2 velocity;
         public float efficiency;
-        public bool isGrounded;
+        public bool isGrounded; // Always false for swimming creatures
         public bool isReproductionReady;
     }
 

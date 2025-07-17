@@ -40,9 +40,9 @@ namespace EvolutionSimulator.Creatures.Core
 
         void SetupRigidbody()
         {
-            rigidBody.gravityScale = 0f;
-            rigidBody.drag = 0f;
-            rigidBody.angularDrag = 0f;
+            rigidBody.gravityScale = 0f; // Swimming - no gravity
+            rigidBody.linearDamping = 0f;
+            rigidBody.angularDamping = 0f;
         }
 
         void Update()
@@ -55,7 +55,7 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateMotion()
         {
-            // Update segment rotations first
+            // Update segment rotations
             for (int i = 0; i < creatureState.segments.Length; i++)
             {
                 SegmentData segment = creatureState.segments[i];
@@ -76,23 +76,21 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateNodePositions()
         {
-            // Root node doesn't move relative to creature
-            // Update child nodes based on their parent segments
             for (int i = 0; i < creatureState.segments.Length; i++)
             {
                 SegmentData segment = creatureState.segments[i];
 
                 if (
-                    segment.parentNodeIndex >= creatureState.nodes.Length
-                    || segment.childNodeIndex >= creatureState.nodes.Length
+                    segment.parentIndex >= creatureState.nodes.Length
+                    || segment.childIndex >= creatureState.nodes.Length
                 )
                     continue;
 
-                NodeData parentNode = creatureState.nodes[segment.parentNodeIndex];
-                NodeData childNode = creatureState.nodes[segment.childNodeIndex];
+                NodeData parentNode = creatureState.nodes[segment.parentIndex];
+                NodeData childNode = creatureState.nodes[segment.childIndex];
 
                 Utils.UpdateNodePosition(ref childNode, parentNode, segment);
-                creatureState.nodes[segment.childNodeIndex] = childNode;
+                creatureState.nodes[segment.childIndex] = childNode;
             }
         }
 
@@ -101,88 +99,62 @@ namespace EvolutionSimulator.Creatures.Core
             totalThrust = Vector2.zero;
             totalDrag = Vector2.zero;
             currentVelocity = rigidBody.linearVelocity;
+            float maxTotalDrag = currentVelocity.magnitude * 0.9f;
+            float dragPerSegment = maxTotalDrag / creatureState.segments.Length;
 
-            // Calculate thrust from all segments
             for (int i = 0; i < creatureState.segments.Length; i++)
             {
                 SegmentData segment = creatureState.segments[i];
 
-                // Calculate thrust
+                // Calculate thrust for swimming
                 Vector2 segmentThrust = Utils.CalculateThrust(segment, creatureState.nodes);
                 totalThrust += segmentThrust;
 
-                // Calculate drag if enabled
-                if (enableDrag)
-                {
-                    float maxDragPerSegment =
-                        currentVelocity.magnitude * 0.9f / creatureState.segments.Length;
-                    Vector2 segmentDrag = Utils.CalculateWaterDrag(
-                        segment,
-                        creatureState.nodes,
-                        currentVelocity,
-                        maxDragPerSegment
-                    );
-                    totalDrag += segmentDrag;
-                }
+                // Calculate water drag
+                Vector2 segmentDrag = Utils.CalculateWaterDrag(
+                    segment,
+                    creatureState.nodes,
+                    currentVelocity,
+                    dragPerSegment
+                );
+                totalDrag += segmentDrag;
 
-                // Apply energy cost for movement
+                // Energy cost for movement
                 if (energy != null)
                 {
                     float angleChange = Mathf.Abs(segment.currentAngle - segment.prevAngle);
                     energy.ConsumeMovementEnergy(angleChange);
                 }
             }
-
-            // Apply drag multiplier
-            totalDrag *= dragMultiplier;
         }
 
         void ApplyForces()
         {
-            // Apply thrust
             if (totalThrust.magnitude > 0.01f)
-            {
                 rigidBody.AddForce(totalThrust, ForceMode2D.Force);
-            }
 
-            // Apply drag
             if (enableDrag && totalDrag.magnitude > 0.01f)
-            {
                 rigidBody.AddForce(totalDrag, ForceMode2D.Force);
-            }
+
+            Debug.Log($"Total Thrust: {totalThrust}, Total Drag: {totalDrag}");
+            currentVelocity = rigidBody.linearVelocity;
+            Debug.Log($"Current Velocity: {currentVelocity}");
         }
 
-        public Vector2 GetTotalThrust()
-        {
-            return totalThrust;
-        }
+        // Essential getters for force analysis
+        public Vector2 GetCurrentVelocity() => currentVelocity;
 
-        public Vector2 GetTotalDrag()
-        {
-            return totalDrag;
-        }
+        public Vector2 GetTotalThrust() => totalThrust;
 
-        public Vector2 GetCurrentVelocity()
-        {
-            return currentVelocity;
-        }
+        public Vector2 GetTotalDrag() => totalDrag;
 
-        public void SetThrustEnabled(bool enabled)
-        {
-            enableThrust = enabled;
-        }
+        // Control methods
+        public void SetThrustEnabled(bool enabled) => enableThrust = enabled;
 
-        public void SetDragEnabled(bool enabled)
-        {
-            enableDrag = enabled;
-        }
+        public void SetDragEnabled(bool enabled) => enableDrag = enabled;
 
-        public void UpdateCreatureState(CreatureState newState)
-        {
-            creatureState = newState;
-        }
+        public void UpdateCreatureState(CreatureState newState) => creatureState = newState;
 
-        // Calculate movement efficiency for fitness evaluation
         public float GetMovementEfficiency()
         {
             if (currentVelocity.magnitude < 0.01f)
@@ -191,29 +163,17 @@ namespace EvolutionSimulator.Creatures.Core
             float energySpent = 0f;
             for (int i = 0; i < creatureState.segments.Length; i++)
             {
-                SegmentData segment = creatureState.segments[i];
-                float angleChange = Mathf.Abs(segment.currentAngle - segment.prevAngle);
-                energySpent += angleChange * 0.001f; // Energy cost calculation
+                float angleChange = Mathf.Abs(
+                    creatureState.segments[i].currentAngle - creatureState.segments[i].prevAngle
+                );
+                energySpent += angleChange * 0.001f;
             }
-
             return energySpent > 0f ? currentVelocity.magnitude / energySpent : 0f;
         }
 
-        // Get creature's forward direction based on movement
         public Vector2 GetForwardDirection()
         {
             return currentVelocity.magnitude > 0.01f ? currentVelocity.normalized : Vector2.right;
-        }
-
-        // Calculate total kinetic energy
-        public float GetKineticEnergy()
-        {
-            if (rigidBody == null)
-                return 0f;
-
-            float mass = rigidBody.mass;
-            float velocity = currentVelocity.magnitude;
-            return 0.5f * mass * velocity * velocity;
         }
 
         void OnValidate()

@@ -4,12 +4,16 @@ namespace EvolutionSimulator.Creatures.Core
 {
     public static class Utils
     {
-        public static void UpdateSegmentPosition(ref SegmentData segment, NodeData[] nodes, float deltaTime)
+        public static void UpdateSegmentRotation(
+            ref SegmentData segment,
+            NodeData[] nodes,
+            float deltaTime
+        )
         {
-            if (segment.parentIndex >= nodes.Length || segment.childIndex >=nodes.Length)
+            if (segment.parentIndex >= nodes.Length || segment.childIndex >= nodes.Length)
                 return;
 
-            segment.prevAngle = segmnent.currentAngle;
+            segment.prevAngle = segment.currentAngle;
             float cycleTime = (Time.time / segment.oscSpeed) % segment.oscSpeed;
             float modifiedTime;
 
@@ -24,34 +28,55 @@ namespace EvolutionSimulator.Creatures.Core
                 modifiedTime = Mathf.PI + (remainingTime / backDuration) * Mathf.PI;
             }
 
-            segment.currentAngle = ((Mathf.Sin(modifiedTime - Mathf.PI / 2f) + 1f ) / 2f) * segment.maxAngle;
+            segment.currentAngle =
+                ((Mathf.Sin(modifiedTime - Mathf.PI / 2f) + 1f) / 2f) * segment.maxAngle;
         }
-    
-        public static void UpdateNodePosition(ref NodeData childNode, NodeData parentNode, SegmentData segment, float accumulatedAngle = 0f)
-        {
-            float totalAngle = (segment.baseAngle + accumulatedAngle + segment.currentAngle) * Mathf.Deg2Rad;
 
-            Vector3 offset = new Vector3(segment.length * Mathf.Cos(totalAngle), segment.length * Mathf.Sin(totalAngle), 0f);
+        public static void UpdateNodePosition(
+            ref NodeData childNode,
+            NodeData parentNode,
+            SegmentData segment,
+            float accumulatedAngle = 0f
+        )
+        {
+            float totalAngle =
+                (segment.baseAngle + accumulatedAngle + segment.currentAngle) * Mathf.Deg2Rad;
+
+            Vector3 offset = new Vector3(
+                segment.length * Mathf.Cos(totalAngle),
+                segment.length * Mathf.Sin(totalAngle),
+                0f
+            );
             childNode.position = parentNode.position + offset;
         }
 
-        public static Vector2 CalculateThrust(SegmentData segment, NodeData, nodes)
+        public static Vector2 CalculateThrust(SegmentData segment, NodeData[] nodes)
         {
             if (segment.parentIndex >= nodes.Length || segment.childIndex >= nodes.Length)
                 return Vector2.zero;
 
-            Vector2 thrustDirection = segment.GetThrustDirection();
+            Vector2 thrustDirection = segment.GetThrustDirection(nodes);
             float angleChange = Mathf.Abs(segment.currentAngle - segment.prevAngle);
             float thrustMagnitude = angleChange * segment.thrustCoef;
 
             return thrustDirection * thrustMagnitude;
         }
 
-        public static Vector2 CalculateWaterDrag(SegmentData segment, NodeData[] nodes, Vector2 velocity, float maxDrag)
+        public static Vector2 CalculateWaterDrag(
+            SegmentData segment,
+            NodeData[] nodes,
+            Vector2 velocity,
+            float maxDrag
+        )
         {
-            if (velocity.magnitude < 0.01f || segment.parentIndex >= nodes.Length || segment.childIndex >= nodes.Length)
+            if (
+                velocity.magnitude < 0.01f
+                || segment.parentIndex >= nodes.Length
+                || segment.childIndex >= nodes.Length
+            )
                 return Vector2.zero;
-            Vector2 segmentDirection = segment.GetDirection();
+
+            Vector2 segmentDirection = segment.GetDirection(nodes);
             float angle = Vector2.Angle(segmentDirection, velocity.normalized);
             float normalizedAngle = angle / 90f;
             float dragMagnitude = Mathf.Lerp(0.1f, maxDrag, normalizedAngle);
@@ -90,19 +115,23 @@ namespace EvolutionSimulator.Creatures.Core
         public static Mesh CreateQuadMesh()
         {
             Mesh mesh = new Mesh();
-            Vector3[] vertices = {
+            Vector3[] vertices =
+            {
                 new Vector3(-0.5f, -0.5f, 0f),
                 new Vector3(0.5f, -0.5f, 0f),
                 new Vector3(0.5f, 0.5f, 0f),
-                new Vector3(-0.5f, 0.5f, 0f)
-            }
+                new Vector3(-0.5f, 0.5f, 0f),
+            };
+
             int[] triangles = { 0, 2, 1, 0, 3, 2 };
-            Vector2[] uv = {
+
+            Vector2[] uv =
+            {
                 new Vector2(0f, 0f),
                 new Vector2(1f, 0f),
                 new Vector2(1f, 1f),
-                new Vector2(0f, 1f)
-            }
+                new Vector2(0f, 1f),
+            };
 
             mesh.vertices = vertices;
             mesh.triangles = triangles;
@@ -124,7 +153,11 @@ namespace EvolutionSimulator.Creatures.Core
 
         public static Vector3 GetSegmentCenter(SegmentData segment, NodeData[] nodes)
         {
-            if (segment.parentIndex >= 0 || segment.childIndex >= nodes.Length)
+            if (
+                segment.parentIndex < 0
+                || segment.parentIndex >= nodes.Length
+                || segment.childIndex >= nodes.Length
+            )
                 return Vector3.zero;
 
             return (nodes[segment.parentIndex].position + nodes[segment.childIndex].position) / 2f;

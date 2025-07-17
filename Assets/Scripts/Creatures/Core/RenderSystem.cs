@@ -26,13 +26,12 @@ namespace EvolutionSimulator.Creatures.Core
 
         private CreatureState creatureState;
         private Mesh nodeMesh;
-        private Mesh segmentMesh;
         private LineRenderer[] segmentRenderers;
         private LineRenderer velocityRenderer;
 
         private Material nodeMatInstance;
         private Material segmentMatInstance;
-        private Material velocityMatInstance;
+        private Material debugMatInstance;
 
         public void Initialize(CreatureState state)
         {
@@ -45,22 +44,10 @@ namespace EvolutionSimulator.Creatures.Core
 
         void SetupMaterials()
         {
-            if (nodeMaterial != null)
-            {
-                nodeMatInstance = new Material(Shader.Find("Sprites/Default"));
-            }
-            if (segmentMaterial != null)
-            {
-                segmentMatInstance = new Material(Shader.Find("Sprites/Default"));
-            }
-            if (debugMaterial != null)
-            {
-                debugMatInstance = new Material(Shader.Find("Sprites/Default"));
-            }
-
-            nodeMatInstance = new Material(nodeMaterial);
-            segmentMatInstance = new Material(segmentMaterial);
-            debugMatInstance = new Material(debugMaterial);
+            // Create material instances to avoid modifying shared materials
+            nodeMatInstance = new Material(Shader.Find("Sprites/Default"));
+            segmentMatInstance = new Material(Shader.Find("Sprites/Default"));
+            debugMatInstance = new Material(Shader.Find("Sprites/Default"));
         }
 
         void SetupMeshes()
@@ -110,7 +97,7 @@ namespace EvolutionSimulator.Creatures.Core
 
         void Update()
         {
-            if (!enableRendering || !creatureState.isInitialize)
+            if (!enableRendering || !creatureState.isInitialized)
                 return;
 
             RenderNodes();
@@ -126,6 +113,7 @@ namespace EvolutionSimulator.Creatures.Core
             {
                 NodeData node = creatureState.nodes[i];
                 Color nodeColor = DataConstants.DEFAULT_NODE_COLOR;
+
                 Energy energy = GetComponent<Energy>();
                 if (energy != null && energy.IsReproductionReady)
                 {
