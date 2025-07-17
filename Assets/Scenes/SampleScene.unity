@@ -565,8 +565,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 300
-  height: 300
+  width: 250
+  height: 250
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -641,7 +641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   initialPopulationSize: 200
-  maxPopulationSize: 617
+  maxPopulationSize: 400
   spawnOnStart: 1
   enableAutoSpawn: 0
   spawnInterval: 1

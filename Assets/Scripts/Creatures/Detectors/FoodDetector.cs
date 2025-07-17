@@ -8,7 +8,7 @@ namespace EvolutionSimulator.Creatures.Detectors
     {
         [Header("Detection Settings")]
         [SerializeField]
-        private float detectionRadius = 2f;
+        private float detectionRadius = 3f;
 
         private Energy creatureEnergy;
         private FoodManager foodManager;
