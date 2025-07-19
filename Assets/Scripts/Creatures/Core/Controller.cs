@@ -21,6 +21,10 @@ namespace EvolutionSimulator.Creatures.Core
         private List<Segment> segments = new List<Segment>();
         private LineRenderer velocityDebugLine;
 
+        private float startTime;
+        private const float STARTUP_DELAY = 5f;
+        private bool canApplyThrust = false;
+
         public CreatureGenome GetGenome() => genome;
 
         public void Initialize(CreatureGenome creatureGenome)
@@ -41,15 +45,22 @@ namespace EvolutionSimulator.Creatures.Core
 
         void Update()
         {
-            UpdateSegmentRotations();
-            ApplyThrust();
-            if (showThrustDebug != prevThrustDebug)
+            if (!canApplyThrust && Time.time - startTime > STARTUP_DELAY)
             {
-                UpdateSegmentDebug();
-                prevThrustDebug = showThrustDebug;
+                canApplyThrust = true;
             }
-            if (showVelocityDebug)
-                UpdateVelocityDebug();
+            UpdateSegmentRotations();
+            if (canApplyThrust)
+            {
+                ApplyThrust();
+                if (showThrustDebug != prevThrustDebug)
+                {
+                    UpdateSegmentDebug();
+                    prevThrustDebug = showThrustDebug;
+                }
+                if (showVelocityDebug)
+                    UpdateVelocityDebug();
+            }
         }
 
         void SetupComponents()

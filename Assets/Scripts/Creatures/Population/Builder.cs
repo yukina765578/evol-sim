@@ -43,6 +43,8 @@ namespace EvolutionSimulator.Creatures.Population
             // Add physics component
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
+            rigidbody.linearVelocity = Vector2.zero;
+            rigidbody.angularVelocity = 0f;
 
             // Add energy system
             var energy = creatureObj.AddComponent<Energy>();

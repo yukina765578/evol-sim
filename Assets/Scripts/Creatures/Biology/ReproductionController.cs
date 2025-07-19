@@ -10,7 +10,7 @@ namespace EvolutionSimulator.Creatures.Biology
     public class ReproductionController : MonoBehaviour
     {
         private float reproductionEnergyCost = 80f;
-        private float offspringSpawnDistance = 3f;
+        private float offspringSpawnDistance = 8f;
         private float reproductionCooldown = 5f;
         private bool logReproduction = false;
 
