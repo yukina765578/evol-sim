@@ -4,12 +4,9 @@ namespace EvolutionSimulator.Creatures.Genetics
 {
     public static class Randomizer
     {
-        private const int MIN_NODES = 3;
-        private const int MAX_NODES = 20;
-
         public static CreatureGenome GenerateRandomGenome()
         {
-            int nodeCount = Random.Range(MIN_NODES, MAX_NODES);
+            int nodeCount = Random.Range(GeneticsConstants.MIN_NODES, GeneticsConstants.MAX_NODES);
             NodeGene[] nodes = new NodeGene[nodeCount];
 
             nodes[0] = new NodeGene(-1, 0f, 0f, 0f, 0f);
@@ -19,10 +16,16 @@ namespace EvolutionSimulator.Creatures.Genetics
                 int parentIndex = Random.Range(0, i);
                 nodes[i] = new NodeGene(
                     parentIndex,
-                    Random.Range(0f, 360f), // base angle
-                    Random.Range(0.5f, 8f), // oscillation speed
-                    Random.Range(-180f, 180f), // max angle
-                    Random.Range(0.01f, 0.5f) // forward ratio
+                    Random.Range(
+                        GeneticsConstants.MIN_BASE_ANGLE,
+                        GeneticsConstants.MAX_BASE_ANGLE
+                    ), // base angle
+                    Random.Range(GeneticsConstants.MIN_OSC_SPEED, GeneticsConstants.MAX_OSC_SPEED), // oscillation speed
+                    Random.Range(GeneticsConstants.MIN_MAX_ANGLE, GeneticsConstants.MAX_MAX_ANGLE), // max angle
+                    Random.Range(
+                        GeneticsConstants.MIN_FORWARD_RATIO,
+                        GeneticsConstants.MAX_FORWARD_RATIO
+                    ) // forward ratio
                 );
             }
 

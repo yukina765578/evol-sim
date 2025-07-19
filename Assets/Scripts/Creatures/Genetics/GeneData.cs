@@ -9,7 +9,7 @@ namespace EvolutionSimulator.Creatures.Genetics
         public float baseAngle; // 0-360 degrees
         public float oscSpeed; // 0.5-8.0 oscillation speed
         public float maxAngle; // -180 to 180 degrees
-        public float forwardRatio; // 0.01-0.99 forward ratio
+        public float forwardRatio; // 0.1 to 0.5 forward ratio
 
         public NodeGene(int parent, float angle, float speed, float max, float ratio)
         {
@@ -23,10 +23,26 @@ namespace EvolutionSimulator.Creatures.Genetics
             }
             else
             {
-                baseAngle = Mathf.Clamp(angle, 0f, 360f);
-                oscSpeed = Mathf.Clamp(speed, 0.5f, 8f);
-                maxAngle = Mathf.Clamp(max, -180f, 180f);
-                forwardRatio = Mathf.Clamp(ratio, 0.01f, 0.99f);
+                baseAngle = Mathf.Clamp(
+                    angle,
+                    GeneticsConstants.MIN_BASE_ANGLE,
+                    GeneticsConstants.MAX_BASE_ANGLE
+                );
+                oscSpeed = Mathf.Clamp(
+                    speed,
+                    GeneticsConstants.MIN_OSC_SPEED,
+                    GeneticsConstants.MAX_OSC_SPEED
+                );
+                maxAngle = Mathf.Clamp(
+                    max,
+                    GeneticsConstants.MIN_MAX_ANGLE,
+                    GeneticsConstants.MIN_MAX_ANGLE
+                );
+                forwardRatio = Mathf.Clamp(
+                    ratio,
+                    GeneticsConstants.MIN_FORWARD_RATIO,
+                    GeneticsConstants.MAX_FORWARD_RATIO
+                );
             }
         }
 

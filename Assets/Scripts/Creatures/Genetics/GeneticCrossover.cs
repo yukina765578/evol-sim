@@ -91,32 +91,32 @@ namespace EvolutionSimulator.Creatures.Genetics
                 {
                     node.baseAngle = Mathf.Clamp(
                         node.baseAngle + Random.Range(-10f, 10f),
-                        0f,
-                        360f
+                        GeneticsConstants.MIN_BASE_ANGLE,
+                        GeneticsConstants.MAX_BASE_ANGLE
                     );
                 }
                 if (Random.value < MUTATION_RATE)
                 {
                     node.oscSpeed = Mathf.Clamp(
                         node.oscSpeed + Random.Range(-0.5f, 0.5f),
-                        0.1f,
-                        10f
+                        GeneticsConstants.MIN_OSC_SPEED,
+                        GeneticsConstants.MAX_OSC_SPEED
                     );
                 }
                 if (Random.value < MUTATION_RATE)
                 {
                     node.maxAngle = Mathf.Clamp(
                         node.maxAngle + Random.Range(-10f, 10f),
-                        -180f,
-                        180f
+                        GeneticsConstants.MIN_MAX_ANGLE,
+                        GeneticsConstants.MAX_MAX_ANGLE
                     );
                 }
                 if (Random.value < MUTATION_RATE)
                 {
                     node.forwardRatio = Mathf.Clamp(
                         node.forwardRatio + Random.Range(-0.1f, 0.1f),
-                        0.01f,
-                        0.5f
+                        GeneticsConstants.MIN_FORWARD_RATIO,
+                        GeneticsConstants.MAX_FORWARD_RATIO
                     );
                 }
                 genome.nodes[i] = node;

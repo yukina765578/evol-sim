@@ -15,8 +15,8 @@ namespace EvolutionSimulator.Creatures.Core
 
         private float maxEnergy = 100f;
         private float basalConstant = 0.1f;
-        private float movementConstant = 0.001f;
-        private float powerExponent = 1.5f;
+        private float movementConstant = 0.01f;
+        private float powerExponent = 2f;
         private float maxAge = 300f; // 5 minutes
         private float reproductionThreshold = 80f;
         private bool reproductionReady = false;
@@ -70,7 +70,7 @@ namespace EvolutionSimulator.Creatures.Core
         public void ConsumeMovementEnergy(float angleChange)
         {
             float energyCost =
-                Mathf.Pow(1 + angleChange, powerExponent) * movementConstant * Time.deltaTime;
+                Mathf.Pow(angleChange, powerExponent) * movementConstant * Time.deltaTime;
             ConsumeEnergy(energyCost);
         }
 

@@ -101,7 +101,7 @@ namespace EvolutionSimulator.Creatures.Core
             Vector2 totalDrag = Vector2.zero;
 
             Vector2 currentVelocity = creatureRigidbody.linearVelocity;
-            float maxTotalDrag = currentVelocity.magnitude * 0.9f;
+            float maxTotalDrag = currentVelocity.magnitude * 0.3f;
             float maxDragPerSegment = maxTotalDrag / segments.Count;
 
             foreach (Segment segment in segments)
@@ -111,6 +111,10 @@ namespace EvolutionSimulator.Creatures.Core
             }
 
             creatureRigidbody.AddForce(totalThrust, ForceMode2D.Force);
+            if (totalDrag.magnitude > 0f)
+            {
+                creatureRigidbody.AddForce(totalDrag, ForceMode2D.Force);
+            }
         }
 
         void UpdateVelocityDebug()

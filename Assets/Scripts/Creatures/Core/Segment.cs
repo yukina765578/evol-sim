@@ -136,6 +136,9 @@ namespace EvolutionSimulator.Creatures.Core
 
             currentAngle = ((Mathf.Sin(modifiedT - Mathf.PI / 2f) + 1f) / 2f) * maxAngle;
 
+            float angleChange = Mathf.Abs(currentAngle - prevAngle);
+            energy.ConsumeMovementEnergy(angleChange);
+
             Vector3 anchorPosition = parentNode.transform.position;
             Vector3 childPosition =
                 anchorPosition
@@ -158,7 +161,7 @@ namespace EvolutionSimulator.Creatures.Core
             Vector2 thrust = (childDelta + parentDelta) * 0.5f;
             Vector2 thrustDirection = -thrust.normalized;
 
-            float thrustMagnitude = thrust.magnitude * thrustCoefficient;
+            float thrustMagnitude = Mathf.Pow(thrust.magnitude, 1.5f) * thrustCoefficient;
             Vector2 result = thrustDirection * thrustMagnitude;
 
             if (debugMode && thrustDebugLine != null)
