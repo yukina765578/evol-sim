@@ -130,12 +130,13 @@ namespace EvolutionSimulator.Creatures.Core
                 LineRenderer lr = lineObj.AddComponent<LineRenderer>();
                 lr.material = segmentMatInstance;
                 lr.positionCount = 2;
-                lr.useWorldSpace = false;
+                lr.useWorldSpace = true;
                 lr.sortingOrder = 0;
                 lr.startWidth = DataConstants.DEFAULT_SEGMENT_WIDTH;
                 lr.endWidth = DataConstants.DEFAULT_SEGMENT_WIDTH;
                 lr.startColor = DataConstants.DEFAULT_SEGMENT_COLOR;
                 lr.endColor = DataConstants.DEFAULT_SEGMENT_COLOR;
+
                 segmentRenderers[i] = lr;
             }
         }
@@ -194,7 +195,7 @@ namespace EvolutionSimulator.Creatures.Core
                 Color nodeColor = DataConstants.DEFAULT_NODE_COLOR;
 
                 Energy energy = GetComponent<Energy>();
-                if (energy != null)
+                if (energy != null && energy.IsReproductionReady)
                     nodeColor = DataConstants.REPRODUCTION_COLOR;
 
                 Vector3 localPosition = node.position;
@@ -219,11 +220,14 @@ namespace EvolutionSimulator.Creatures.Core
                 if (segmentRenderers[i] == null)
                     continue;
 
-                Vector3 startPos = creatureState.nodes[segment.parentIndex].position;
-                Vector3 endPos = creatureState.nodes[segment.childIndex].position;
+                Vector3 localStartPos = creatureState.nodes[segment.parentIndex].position;
+                Vector3 localEndPos = creatureState.nodes[segment.childIndex].position;
 
-                segmentRenderers[i].SetPosition(0, startPos);
-                segmentRenderers[i].SetPosition(1, endPos);
+                Vector3 worldStartPos = transform.TransformPoint(localStartPos);
+                Vector3 worldEndPos = transform.TransformPoint(localEndPos);
+
+                segmentRenderers[i].SetPosition(0, worldStartPos);
+                segmentRenderers[i].SetPosition(1, worldEndPos);
             }
         }
 

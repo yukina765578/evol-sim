@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &93079342
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,7 +152,7 @@ MonoBehaviour:
   spawnPosition: {x: 0, y: 0, z: 0}
   showCreatureStats: 1
   enableThrustDebug: 0
-  enableVelocityDebug: 0
+  enableVelocityDebug: 1
   testNodes:
   - parentIndex: -1
     baseAngle: 0
@@ -567,8 +567,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 250
-  height: 250
+  width: 500
+  height: 500
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -582,7 +582,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 
@@ -625,13 +625,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 200
-  maxPopulationSize: 400
+  initialPopulationSize: 400
+  maxPopulationSize: 1000
   spawnOnStart: 1
   enableAutoSpawn: 0
   spawnInterval: 1
@@ -673,7 +673,6 @@ MonoBehaviour:
   foodMaterial: {fileID: 2100000, guid: 09d148cc788c59644b890c57c760eb8d, type: 2}
   foodMesh: {fileID: 0}
   gridResolution: 50
-  detectionRadius: 1
 --- !u!1 &1472847868
 GameObject:
   m_ObjectHideFlags: 0

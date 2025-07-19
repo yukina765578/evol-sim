@@ -159,8 +159,8 @@ namespace EvolutionSimulator.Creatures.Core
     public static class DataConstants
     {
         public const float DEFAULT_NODE_SIZE = 1f;
-        public const float DEFAULT_SEGMENT_LENGTH = 4f;
-        public const float DEFAULT_SEGMENT_WIDTH = 0.5f;
+        public const float DEFAULT_SEGMENT_LENGTH = 2f;
+        public const float DEFAULT_SEGMENT_WIDTH = 0.2f;
         public const float THRUST_COEF = 30f;
 
         public static readonly Color DEFAULT_NODE_COLOR = Color.blue;
