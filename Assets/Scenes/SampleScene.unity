@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &93079342
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,6 +150,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spawnOnStart: 1
   spawnPosition: {x: 0, y: 0, z: 0}
+  showCreatureStats: 1
+  enableThrustDebug: 0
+  enableVelocityDebug: 0
   testNodes:
   - parentIndex: -1
     baseAngle: 0
@@ -635,7 +638,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
@@ -693,7 +696,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1472847870}
-  - component: {fileID: 1472847869}
   m_Layer: 0
   m_Name: CreatureTest
   m_TagString: Untagged
@@ -701,18 +703,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!114 &1472847869
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1472847868}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7dcb5fdc19dbe444a834851fcaf0cc49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1472847870
 Transform:
   m_ObjectHideFlags: 0

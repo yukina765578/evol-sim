@@ -108,7 +108,7 @@ namespace EvolutionSimulator.Creatures.Test
                         var renderSystem = currentCreature.GetComponent<RenderSystem>();
                         if (renderSystem != null)
                         {
-                            renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                            renderSystem.SetupDebugMode(enableThrustDebug, enableVelocityDebug);
                         }
                     }
 
@@ -202,7 +202,7 @@ namespace EvolutionSimulator.Creatures.Test
                 var renderSystem = currentCreature.GetComponent<RenderSystem>();
                 if (renderSystem != null)
                 {
-                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                    renderSystem.SetupDebugMode(enableThrustDebug, enableVelocityDebug);
                 }
             }
             Debug.Log($"🔧 Thrust Debug: {(enableThrustDebug ? "ON" : "OFF")}");
@@ -216,7 +216,7 @@ namespace EvolutionSimulator.Creatures.Test
                 var renderSystem = currentCreature.GetComponent<RenderSystem>();
                 if (renderSystem != null)
                 {
-                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                    renderSystem.SetupDebugMode(enableThrustDebug, enableVelocityDebug);
                 }
             }
             Debug.Log($"🔧 Velocity Debug: {(enableVelocityDebug ? "ON" : "OFF")}");
@@ -302,7 +302,7 @@ namespace EvolutionSimulator.Creatures.Test
                 var renderSystem = currentCreature.GetComponent<RenderSystem>();
                 if (renderSystem != null)
                 {
-                    renderSystem.SetDebugMode(enableThrustDebug, enableVelocityDebug);
+                    renderSystem.SetupDebugMode(enableThrustDebug, enableVelocityDebug);
                 }
             }
         }

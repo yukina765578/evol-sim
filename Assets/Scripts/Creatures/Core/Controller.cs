@@ -141,7 +141,7 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateDebugSettings()
         {
-            renderSystem?.SetDebugMode(false, showVelocityDebug);
+            renderSystem?.SetupDebugMode(false, showVelocityDebug);
         }
 
         public void HandleDeath(string cause)
