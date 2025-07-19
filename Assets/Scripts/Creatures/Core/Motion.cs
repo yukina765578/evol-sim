@@ -14,6 +14,13 @@ namespace EvolutionSimulator.Creatures.Core
         [SerializeField]
         private float dragMultiplier = 1f;
 
+        [Header("Spawn Settings")]
+        [SerializeField]
+        private int warmupFrames = 5;
+
+        private int frameSinceSpawn = 0;
+        private bool isInWarmup => frameSinceSpawn < warmupFrames;
+
         private CreatureState creatureState;
         private Rigidbody2D rigidBody;
         private Energy energy;
@@ -67,8 +74,12 @@ namespace EvolutionSimulator.Creatures.Core
             UpdateRelativeNodePositions();
 
             // Calculate and apply forces to the entire creature
-            CalculateForces();
-            ApplyForces();
+            frameSinceSpawn++;
+            if (!isInWarmup)
+            {
+                CalculateForces();
+                ApplyForces();
+            }
 
             // Update previous positions for next frame
             creatureState.UpdatePrevPositions();
@@ -106,7 +117,7 @@ namespace EvolutionSimulator.Creatures.Core
             totalThrust = Vector2.zero;
             totalDrag = Vector2.zero;
             currentVelocity = rigidBody.linearVelocity;
-            float maxTotalDrag = currentVelocity.magnitude * 0.5f;
+            float maxTotalDrag = currentVelocity.magnitude * 0.2f;
             float dragPerSegment = maxTotalDrag / creatureState.segments.Length;
 
             for (int i = 0; i < creatureState.segments.Length; i++)
@@ -142,8 +153,8 @@ namespace EvolutionSimulator.Creatures.Core
                 rigidBody.AddForce(totalThrust, ForceMode2D.Force);
 
             // TODO: Work on drag application
-            // if (enableDrag && totalDrag.magnitude > 0.01f)
-            //     rigidBody.AddForce(totalDrag, ForceMode2D.Force);
+            if (enableDrag && totalDrag.magnitude > 0.01f)
+                rigidBody.AddForce(totalDrag, ForceMode2D.Force);
 
             currentVelocity = rigidBody.linearVelocity;
 

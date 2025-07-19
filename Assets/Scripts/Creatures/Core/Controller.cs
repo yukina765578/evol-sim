@@ -9,9 +9,6 @@ namespace EvolutionSimulator.Creatures.Core
         [SerializeField]
         private bool showVelocityDebug = false;
 
-        [SerializeField]
-        private bool showCreatureInfo = false;
-
         private CreatureGenome genome;
         private CreatureState creatureState;
         private bool isDead = false;

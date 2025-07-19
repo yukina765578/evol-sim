@@ -57,7 +57,6 @@ namespace EvolutionSimulator.Creatures.Core
         public float forwardRatio;
         public float currentAngle;
         public float prevAngle;
-        public float thrustCoef;
 
         public SegmentData(
             int parent,
@@ -80,7 +79,6 @@ namespace EvolutionSimulator.Creatures.Core
             forwardRatio = nodeGene.forwardRatio;
             currentAngle = 0f;
             prevAngle = 0f;
-            thrustCoef = 30f;
         }
 
         public Vector2 GetThrustDirection(NodeData[] nodes)
@@ -161,9 +159,9 @@ namespace EvolutionSimulator.Creatures.Core
     public static class DataConstants
     {
         public const float DEFAULT_NODE_SIZE = 1f;
-        public const float DEFAULT_SEGMENT_LENGTH = 2f;
+        public const float DEFAULT_SEGMENT_LENGTH = 4f;
         public const float DEFAULT_SEGMENT_WIDTH = 0.5f;
-        public const float THRUST_COEFFICIENT = 15f;
+        public const float THRUST_COEF = 30f;
 
         public static readonly Color DEFAULT_NODE_COLOR = Color.blue;
         public static readonly Color DEFAULT_SEGMENT_COLOR = Color.white;

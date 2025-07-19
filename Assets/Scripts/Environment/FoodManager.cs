@@ -30,9 +30,6 @@ namespace EvolutionSimulator.Environment
         [SerializeField]
         private int gridResolution = 50;
 
-        [SerializeField]
-        private float detectionRadius = 1f;
-
         private FoodData[] foodItems;
         private int maxFoodCount;
         private int activeFoodCount;

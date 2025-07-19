@@ -60,7 +60,7 @@ namespace EvolutionSimulator.Creatures.Core
             Vector2 thrust = (childMovement + parentMovement) / 2f;
             Vector2 thrustDirection = -thrust.normalized;
 
-            float thrustMagnitude = thrust.magnitude * segment.thrustCoef;
+            float thrustMagnitude = Mathf.Pow(thrust.magnitude, 2f) * DataConstants.THRUST_COEF;
             Vector2 result = thrustDirection * thrustMagnitude;
 
             return result;
