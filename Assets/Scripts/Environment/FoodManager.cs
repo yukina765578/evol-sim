@@ -11,13 +11,17 @@ namespace EvolutionSimulator.Environment
         private float energyValue = 10f;
 
         [SerializeField]
-        private float respawnDelay = 5f;
-
-        [SerializeField]
         private int maxFoodPerCell = 3;
 
         [SerializeField]
         private float foodSize = 0.5f;
+
+        [Header("Probability Spawning")]
+        [SerializeField]
+        private float baseSpawnRate = 0.002f; // Probability per frame per cell
+
+        [SerializeField]
+        private float minSpawnInterval = 1f; // Cooldown between spawns per cell
 
         [Header("Rendering")]
         [SerializeField]
@@ -40,9 +44,13 @@ namespace EvolutionSimulator.Environment
         private Vector2 cellSize;
         private Bounds worldBounds;
 
+        // Probability spawning tracking
+        private int[] foodCountPerCell;
+        private float[] lastSpawnTimePerCell;
+
         private GraphicsBuffer positionBuffer;
-        private Vector3[] positionArray; // Fixed-size array
-        private int visibleFoodCount = 0; // Track actual visible food count
+        private Vector3[] positionArray;
+        private int visibleFoodCount = 0;
 
         private NoiseManager noiseManager;
         private NoiseSettings noiseSettings;
@@ -71,7 +79,6 @@ namespace EvolutionSimulator.Environment
             );
             CreateFoodMesh();
 
-            // Create fixed-size buffer and array
             positionArray = new Vector3[maxFoodCount];
             positionBuffer = new GraphicsBuffer(
                 GraphicsBuffer.Target.Structured,
@@ -85,7 +92,7 @@ namespace EvolutionSimulator.Environment
 
         void Update()
         {
-            ProcessRespawns();
+            ProcessProbabilitySpawning();
             UpdateSpatialGrid();
             RenderFood();
         }
@@ -95,6 +102,8 @@ namespace EvolutionSimulator.Environment
             maxFoodCount = noiseSettings.gridWidth * noiseSettings.gridHeight * maxFoodPerCell;
             foodItems = new FoodData[maxFoodCount];
             spatialGrid = new List<int>[gridResolution * gridResolution];
+            foodCountPerCell = new int[gridResolution * gridResolution];
+            lastSpawnTimePerCell = new float[gridResolution * gridResolution];
 
             for (int i = 0; i < spatialGrid.Length; i++)
                 spatialGrid[i] = new List<int>();
@@ -198,17 +207,92 @@ namespace EvolutionSimulator.Environment
                 gridResolution - 1
             );
 
+            int cellIndex = gridY * gridResolution + gridX;
+
             foodItems[activeFoodCount] = new FoodData
             {
                 position = position,
                 energy = energyValue,
-                consumed = false,
-                respawnTimer = 0f,
                 gridX = gridX,
                 gridY = gridY,
             };
 
+            foodCountPerCell[cellIndex]++;
             activeFoodCount++;
+        }
+
+        void ProcessProbabilitySpawning()
+        {
+            bool anySpawned = false;
+            for (int cellIndex = 0; cellIndex < spatialGrid.Length; cellIndex++)
+            {
+                // Skip if cell is at max capacity
+                if (foodCountPerCell[cellIndex] >= maxFoodPerCell)
+                    continue;
+
+                // Skip if still on cooldown
+                if (Time.time - lastSpawnTimePerCell[cellIndex] < minSpawnInterval)
+                    continue;
+
+                // Calculate spawn probability
+                float spawnChance = CalculateSpawnProbability(cellIndex);
+
+                if (Random.value < spawnChance)
+                {
+                    SpawnFoodInCell(cellIndex);
+                    lastSpawnTimePerCell[cellIndex] = Time.time;
+                    anySpawned = true;
+                }
+            }
+
+            if (anySpawned)
+            {
+                UpdatePositionBuffer();
+            }
+        }
+
+        float CalculateSpawnProbability(int cellIndex)
+        {
+            // Get grid coordinates from cell index
+            int gridY = cellIndex / gridResolution;
+            int gridX = cellIndex % gridResolution;
+
+            // Get cell center world position
+            Vector2 cellCenter = new Vector2(
+                worldBounds.min.x + (gridX + 0.5f) * cellSize.x,
+                worldBounds.min.y + (gridY + 0.5f) * cellSize.y
+            );
+
+            // Sample noise for this location
+            float noiseValue = PerlinNoise.SampleRaw(
+                cellCenter.x,
+                cellCenter.y,
+                noiseSettings.scale,
+                noiseSettings.offset,
+                noiseSettings.contrast
+            );
+
+            // Calculate saturation penalty
+            float saturationPenalty = 1f - ((float)foodCountPerCell[cellIndex] / maxFoodPerCell);
+
+            return baseSpawnRate * noiseValue * saturationPenalty * Time.deltaTime;
+        }
+
+        void SpawnFoodInCell(int cellIndex)
+        {
+            if (activeFoodCount >= maxFoodCount)
+                return;
+
+            int gridY = cellIndex / gridResolution;
+            int gridX = cellIndex % gridResolution;
+
+            Vector2 cellCenter = new Vector2(
+                worldBounds.min.x + (gridX + 0.5f) * cellSize.x,
+                worldBounds.min.y + (gridY + 0.5f) * cellSize.y
+            );
+
+            Vector2 spawnPos = GetRandomPositionInCell(cellCenter, cellSize);
+            SpawnFood(spawnPos);
         }
 
         public bool TryConsumeFood(Vector2 position, float radius, out float energy)
@@ -225,20 +309,17 @@ namespace EvolutionSimulator.Environment
                         continue;
 
                     int cellIndex = y * gridResolution + x;
-                    foreach (int index in spatialGrid[cellIndex])
+                    for (int i = spatialGrid[cellIndex].Count - 1; i >= 0; i--)
                     {
-                        if (index >= activeFoodCount || foodItems[index].consumed)
+                        int foodIndex = spatialGrid[cellIndex][i];
+                        if (foodIndex >= activeFoodCount)
                             continue;
 
-                        if (Vector2.Distance(foodItems[index].position, position) <= radius)
+                        if (Vector2.Distance(foodItems[foodIndex].position, position) <= radius)
                         {
-                            var food = foodItems[index];
-                            food.consumed = true;
-                            food.respawnTimer = respawnDelay;
-                            foodItems[index] = food;
-
-                            energy = food.energy;
-                            UpdatePositionBuffer(); // Update immediately when consumed
+                            energy = foodItems[foodIndex].energy;
+                            RemoveFood(foodIndex);
+                            UpdatePositionBuffer();
                             return true;
                         }
                     }
@@ -247,33 +328,22 @@ namespace EvolutionSimulator.Environment
             return false;
         }
 
-        void ProcessRespawns()
+        void RemoveFood(int index)
         {
-            bool needsUpdate = false;
-            for (int i = 0; i < activeFoodCount; i++)
+            if (index >= activeFoodCount)
+                return;
+
+            // Get cell index for decrementing counter
+            int cellIndex = foodItems[index].gridY * gridResolution + foodItems[index].gridX;
+            foodCountPerCell[cellIndex]--;
+
+            // Move last food item to this slot to fill the gap
+            if (index < activeFoodCount - 1)
             {
-                if (foodItems[i].consumed)
-                {
-                    var food = foodItems[i];
-                    food.respawnTimer -= Time.deltaTime;
-                    if (food.respawnTimer <= 0f)
-                    {
-                        food.consumed = false;
-                        food.respawnTimer = 0f;
-                        food.position = GetRandomPositionInCell(
-                            new Vector2(
-                                worldBounds.min.x + (food.gridX + 0.5f) * cellSize.x,
-                                worldBounds.min.y + (food.gridY + 0.5f) * cellSize.y
-                            ),
-                            cellSize
-                        );
-                        needsUpdate = true;
-                    }
-                    foodItems[i] = food;
-                }
+                foodItems[index] = foodItems[activeFoodCount - 1];
             }
-            if (needsUpdate)
-                UpdatePositionBuffer();
+
+            activeFoodCount--;
         }
 
         void UpdateSpatialGrid()
@@ -283,34 +353,21 @@ namespace EvolutionSimulator.Environment
 
             for (int i = 0; i < activeFoodCount; i++)
             {
-                if (!foodItems[i].consumed)
-                {
-                    int cellIndex = foodItems[i].gridY * gridResolution + foodItems[i].gridX;
-                    if (cellIndex >= 0 && cellIndex < spatialGrid.Length)
-                        spatialGrid[cellIndex].Add(i);
-                }
+                int cellIndex = foodItems[i].gridY * gridResolution + foodItems[i].gridX;
+                if (cellIndex >= 0 && cellIndex < spatialGrid.Length)
+                    spatialGrid[cellIndex].Add(i);
             }
         }
 
         void UpdatePositionBuffer()
         {
-            visibleFoodCount = 0;
+            visibleFoodCount = activeFoodCount;
 
-            // Fill fixed-size array with visible food positions
             for (int i = 0; i < activeFoodCount; i++)
             {
-                if (!foodItems[i].consumed)
-                {
-                    positionArray[visibleFoodCount] = new Vector3(
-                        foodItems[i].position.x,
-                        foodItems[i].position.y,
-                        0
-                    );
-                    visibleFoodCount++;
-                }
+                positionArray[i] = new Vector3(foodItems[i].position.x, foodItems[i].position.y, 0);
             }
 
-            // Update buffer data only - never recreate
             if (positionBuffer != null && visibleFoodCount > 0)
             {
                 positionBuffer.SetData(positionArray);
@@ -350,8 +407,6 @@ namespace EvolutionSimulator.Environment
     {
         public Vector2 position;
         public float energy;
-        public bool consumed;
-        public float respawnTimer;
         public int gridX;
         public int gridY;
     }
