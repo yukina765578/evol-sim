@@ -3,6 +3,7 @@ using EvolutionSimulator.Creatures.Biology;
 using EvolutionSimulator.Creatures.Core;
 using EvolutionSimulator.Creatures.Detectors;
 using EvolutionSimulator.Creatures.Genetics;
+using EvolutionSimulator.Creatures.Sensors;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creatures.Population
@@ -49,14 +50,18 @@ namespace EvolutionSimulator.Creatures.Population
             // Add energy system
             var energy = creatureObj.AddComponent<Energy>();
 
+            // Add main brain neural network
+            var mainBrain = creatureObj.AddComponent<MainBrain>();
+            mainBrain.Initialize(genome);
+
             var reproductionController = creatureObj.AddComponent<ReproductionController>();
 
             // Build creature body
-            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
+            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj, mainBrain);
 
-            SetupDetectioNode(nodes[0]);
+            SetupDetectionNode(nodes[0]);
 
-            // Add controller last (after body is built)
+            // Add controller last (after body and brain are built)
             var controller = creatureObj.AddComponent<Controller>();
             controller.Initialize(genome);
 
@@ -72,12 +77,19 @@ namespace EvolutionSimulator.Creatures.Population
             nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
             nodeRigidbody.gravityScale = 0f;
 
-            // Create separate child for food detection
+            // Create separate child for food detection (consumption)
             GameObject foodDetectorObj = new GameObject("FoodDetector");
             foodDetectorObj.transform.SetParent(nodeObj.transform);
             foodDetectorObj.transform.localPosition = Vector3.zero;
             foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
             foodDetectorObj.AddComponent<FoodDetector>();
+
+            // Create separate child for food sensing (vision)
+            GameObject foodSensorObj = new GameObject("FoodSensor");
+            foodSensorObj.transform.SetParent(nodeObj.transform);
+            foodSensorObj.transform.localPosition = Vector3.zero;
+            foodSensorObj.layer = LayerMask.NameToLayer("Creatures");
+            foodSensorObj.AddComponent<FoodSensor>();
 
             // Create separate child for creature detection
             GameObject creatureDetectorObj = new GameObject("CreatureDetector");
@@ -89,14 +101,21 @@ namespace EvolutionSimulator.Creatures.Population
 
         static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
             CreatureGenome genome,
-            GameObject creatureObj
+            GameObject creatureObj,
+            MainBrain mainBrain
         )
         {
             var nodes = new List<Node>();
             var segments = new List<Segment>();
 
             // Create root node
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
+            Node rootNode = CreateNode(
+                "RootNode",
+                Vector3.zero,
+                creatureObj.transform,
+                genome.nodes[0],
+                mainBrain
+            );
             nodes.Add(rootNode);
 
             // Create child nodes and segments
@@ -115,8 +134,15 @@ namespace EvolutionSimulator.Creatures.Population
                         0
                     );
 
-                // Create node and segment
-                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
+                // Create node with brain
+                Node newNode = CreateNode(
+                    $"Node_{i}",
+                    nodePosition,
+                    creatureObj.transform,
+                    nodeGenome,
+                    mainBrain,
+                    parentNode
+                );
                 nodes.Add(newNode);
 
                 Segment newSegment = CreateSegment(
@@ -132,7 +158,14 @@ namespace EvolutionSimulator.Creatures.Population
             return (nodes, segments);
         }
 
-        static Node CreateNode(string name, Vector3 position, Transform parent)
+        static Node CreateNode(
+            string name,
+            Vector3 position,
+            Transform parent,
+            NodeGene gene,
+            MainBrain mainBrain,
+            Node parentNode = null
+        )
         {
             GameObject nodeObj = new GameObject(name);
             nodeObj.transform.SetParent(parent);
@@ -140,6 +173,11 @@ namespace EvolutionSimulator.Creatures.Population
 
             var node = nodeObj.AddComponent<Node>();
             node.Initialize(NODE_SIZE, NODE_COLOR);
+
+            // Add segment brain neural network
+            var segmentBrain = nodeObj.AddComponent<SegmentBrain>();
+            segmentBrain.Initialize(gene, mainBrain, parentNode);
+
             return node;
         }
 
@@ -159,10 +197,8 @@ namespace EvolutionSimulator.Creatures.Population
                 SEGMENT_LENGTH,
                 SEGMENT_WIDTH,
                 SEGMENT_COLOR,
-                gene.oscSpeed,
                 gene.maxAngle,
-                gene.forwardRatio,
-                gene.baseAngle, // Fixed: Added missing baseAngle parameter
+                gene.baseAngle,
                 parentNode,
                 childNode
             );

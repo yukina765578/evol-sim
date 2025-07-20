@@ -13,13 +13,11 @@ namespace EvolutionSimulator.Creatures.Core
         private Node parentNode;
         private Node childNode;
 
-        private float oscillationSpeed = 2f;
         private float maxAngle;
         private float prevAngle;
         private float currentAngle;
-        private float forwardRatio;
         private float baseAngle;
-
+        private SegmentBrain segmentBrain;
         private float thrustCoefficient = 30f;
 
         private bool debugMode = false;
@@ -43,9 +41,7 @@ namespace EvolutionSimulator.Creatures.Core
             float segmentLength,
             float segmentWidth,
             Color color,
-            float segmentOscillationSpeed,
             float segmentMaxAngle,
-            float segmentForwardRatio,
             float segmentBaseAngle,
             Node parent,
             Node child
@@ -54,9 +50,7 @@ namespace EvolutionSimulator.Creatures.Core
             length = segmentLength;
             width = segmentWidth;
             segmentColor = color;
-            oscillationSpeed = segmentOscillationSpeed;
             maxAngle = segmentMaxAngle;
-            forwardRatio = segmentForwardRatio;
             baseAngle = segmentBaseAngle;
 
             parentNode = parent;
@@ -118,6 +112,10 @@ namespace EvolutionSimulator.Creatures.Core
         {
             if (lineRenderer == null || parentNode == null || childNode == null)
                 Debug.LogError("LineRenderer or Nodes not set up correctly in Segment.");
+
+            // Get neural network outputs instead of genetic parameters
+            float oscillationSpeed = segmentBrain.OscillationSpeed;
+            float forwardRatio = segmentBrain.ForwardRatio;
 
             // Calculate the angle based on oscillation speed and phase offset
             prevAngle = currentAngle;

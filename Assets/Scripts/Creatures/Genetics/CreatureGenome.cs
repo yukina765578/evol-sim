@@ -8,10 +8,15 @@ namespace EvolutionSimulator.Creatures.Genetics
     {
         public NodeGene[] nodes;
 
+        // Main brain neural network weights
+        // 10 inputs -> 2 outputs = 2 perceptrons x 11 values (10 weights + 1 bias)
+        public float[] mainBrainWeights; // 22 values
+
         public CreatureGenome(NodeGene[] nodeArray)
         {
             nodes = nodeArray ?? new NodeGene[1] { new NodeGene(-1, 0, 0, 0, 0) };
-            // Optionally validate
+            // Initialize main brain weights
+            mainBrainWeights = new float[GeneticsConstants.MAIN_BRAIN_WEIGHTS];
         }
 
         public int NodeCount => nodes.Length;

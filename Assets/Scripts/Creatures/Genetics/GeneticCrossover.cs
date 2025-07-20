@@ -51,14 +51,15 @@ namespace EvolutionSimulator.Creatures.Genetics
 
             CreatureGenome offspringGenome = new CreatureGenome(offSpringNodes.ToArray());
 
+            System.Array.Copy(
+                Random.value < 0.5f ? parent1.mainBrainWeights : parent2.mainBrainWeights,
+                offspringGenome.mainBrainWeights,
+                GeneticsConstants.MAIN_BRAIN_WEIGHTS
+            );
+
             MutateGenome(offspringGenome);
 
             return offspringGenome;
-        }
-
-        public static bool Testing()
-        {
-            return true; // Placeholder for testing logic
         }
 
         static int[] GenerateCutPoints(int nodeCount)
@@ -83,6 +84,8 @@ namespace EvolutionSimulator.Creatures.Genetics
 
         static void MutateGenome(CreatureGenome genome)
         {
+            MutateNeuralWeights(genome.mainBrainWeights);
+
             StructuralMutations(genome);
             for (int i = 0; i < genome.NodeCount; i++)
             {
@@ -97,29 +100,34 @@ namespace EvolutionSimulator.Creatures.Genetics
                 }
                 if (Random.value < MUTATION_RATE)
                 {
-                    node.oscSpeed = Mathf.Clamp(
-                        node.oscSpeed + Random.Range(-0.5f, 0.5f),
-                        GeneticsConstants.MIN_OSC_SPEED,
-                        GeneticsConstants.MAX_OSC_SPEED
-                    );
-                }
-                if (Random.value < MUTATION_RATE)
-                {
                     node.maxAngle = Mathf.Clamp(
                         node.maxAngle + Random.Range(-10f, 10f),
                         GeneticsConstants.MIN_MAX_ANGLE,
                         GeneticsConstants.MAX_MAX_ANGLE
                     );
                 }
+
+                MutateNeuralWeights(node.segmentBrainWeights);
+                genome.nodes[i] = node;
+            }
+        }
+
+        static void MutateNeuralWeights(float[] weights)
+        {
+            for (int i = 0; i < weights.Length; i++)
+            {
                 if (Random.value < MUTATION_RATE)
                 {
-                    node.forwardRatio = Mathf.Clamp(
-                        node.forwardRatio + Random.Range(-0.1f, 0.1f),
-                        GeneticsConstants.MIN_FORWARD_RATIO,
-                        GeneticsConstants.MAX_FORWARD_RATIO
+                    weights[i] += Random.Range(
+                        -GeneticsConstants.NEURAL_MUTATION_STRENGTH,
+                        GeneticsConstants.NEURAL_MUTATION_STRENGTH
+                    );
+                    weights[i] = Mathf.Clamp(
+                        weights[i],
+                        GeneticsConstants.MIN_NEURAL_WEIGHT,
+                        GeneticsConstants.MAX_NEURAL_WEIGHT
                     );
                 }
-                genome.nodes[i] = node;
             }
         }
 

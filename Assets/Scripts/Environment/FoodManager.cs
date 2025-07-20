@@ -138,6 +138,52 @@ namespace EvolutionSimulator.Environment
             foodMesh.RecalculateNormals();
         }
 
+        public Vector3 GetNearestFoodInCone(
+            Vector3 observerPosition,
+            Vector3 facingDirection,
+            float sightRange,
+            float sightAngle
+        )
+        {
+            Vector3 nearestFoodPosition = Vector3.zero;
+            float nearestDistance = float.MaxValue;
+
+            float halfAngle = sightAngle / 2f;
+
+            // Search through all active food items
+            for (int i = 0; i < activeFoodCount; i++)
+            {
+                Vector3 foodPosition = new Vector3(
+                    foodItems[i].position.x,
+                    foodItems[i].position.y,
+                    0
+                );
+                Vector3 directionToFood = foodPosition - observerPosition;
+                float distance = directionToFood.magnitude;
+
+                // Check if within sight range
+                if (distance > sightRange)
+                    continue;
+
+                // Check if within sight cone
+                float angleToFood = Vector3.Angle(
+                    facingDirection.normalized,
+                    directionToFood.normalized
+                );
+                if (angleToFood > halfAngle)
+                    continue;
+
+                // This food is visible, check if it's the nearest
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearestFoodPosition = foodPosition;
+                }
+            }
+
+            return nearestFoodPosition;
+        }
+
         void InitialSpawn()
         {
             activeFoodCount = 0;
