@@ -25,8 +25,9 @@ namespace EvolutionSimulator.Creatures.Genetics
         public const int SEGMENT_BRAIN_WEIGHTS = SEGMENT_BRAIN_OUTPUTS * (SEGMENT_BRAIN_INPUTS + 1); // 6 inputs + 1 bias
 
         // Neural Network weight ranges
-        public const float MIN_NN_WEIGHT = -1.0f;
-        public const float MAX_NN_WEIGHT = 1.0f;
+        public const float MIN_NEURAL_WEIGHT = -1.0f;
+        public const float MAX_NEURAL_WEIGHT = 1.0f;
         public const float NEURAL_NETWORK_MUTATION_RATE = 0.1f; // 10% chance to mutate each weight
+        public const float NEURAL_MUTATION_STRENGTH = 0.1f; // How much weights can change during mutation
     }
 }

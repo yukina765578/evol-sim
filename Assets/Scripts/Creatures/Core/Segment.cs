@@ -47,6 +47,11 @@ namespace EvolutionSimulator.Creatures.Core
             Node child
         )
         {
+            segmentBrain = child.GetComponent<SegmentBrain>();
+            if (segmentBrain == null)
+            {
+                Debug.LogError($"SegmentBrain not found on child node {child.name}!");
+            }
             length = segmentLength;
             width = segmentWidth;
             segmentColor = color;
@@ -116,6 +121,12 @@ namespace EvolutionSimulator.Creatures.Core
             // Get neural network outputs instead of genetic parameters
             float oscillationSpeed = segmentBrain.OscillationSpeed;
             float forwardRatio = segmentBrain.ForwardRatio;
+
+            oscillationSpeed = Mathf.Clamp(oscillationSpeed, 0.5f, 5.0f); // Prevent too fast/slow
+            forwardRatio = Mathf.Clamp(forwardRatio, 0.1f, 0.9f); // Prevent extreme ratios
+            Debug.Log(
+                $"Segment {name} - Speed: {oscillationSpeed}, Forward Ratio: {forwardRatio}, Phase Offset: {phaseOffset}"
+            );
 
             // Calculate the angle based on oscillation speed and phase offset
             prevAngle = currentAngle;

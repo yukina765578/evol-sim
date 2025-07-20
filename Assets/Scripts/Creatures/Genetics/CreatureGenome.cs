@@ -14,12 +14,11 @@ namespace EvolutionSimulator.Creatures.Genetics
 
         public CreatureGenome(NodeGene[] nodeArray)
         {
-            nodes = nodeArray ?? new NodeGene[1] { new NodeGene(-1, 0, 0, 0, 0) };
-            // Initialize main brain weights
+            nodes = nodeArray ?? new NodeGene[1] { new NodeGene(-1, 0f, 0f) }; // ✅ 3 parameters
             mainBrainWeights = new float[GeneticsConstants.MAIN_BRAIN_WEIGHTS];
         }
 
         public int NodeCount => nodes.Length;
-        public NodeGene RootNode => nodes.Length > 0 ? nodes[0] : new NodeGene(-1, 0, 0, 0, 0);
+        public NodeGene RootNode => nodes.Length > 0 ? nodes[0] : new NodeGene(-1, 0f, 0f); // ✅ 3 parameters
     }
 }

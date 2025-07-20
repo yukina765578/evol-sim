@@ -68,7 +68,7 @@ namespace EvolutionSimulator.Creatures.Population
             return creatureObj;
         }
 
-        static void SetupDetectioNode(Node detectionNode)
+        static void SetupDetectionNode(Node detectionNode)
         {
             GameObject nodeObj = detectionNode.gameObject;
 

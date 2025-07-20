@@ -145,10 +145,11 @@ namespace EvolutionSimulator.Creatures.Genetics
             NodeGene newNode = new NodeGene(
                 parentIndex,
                 Random.Range(0f, 360f), // baseAngle
-                Random.Range(0.5f, 8f), // oscSpeed
-                Random.Range(-180f, 180f), // maxAngle
-                Random.Range(0.01f, 0.5f) // forwardRatio
+                Random.Range(-180f, 180f) // maxAngle
             );
+
+            // Initialize neural network weights
+            Randomizer.InitializeSegmentBrainWeights(ref newNode);
             NodeGene[] newNodes = new NodeGene[genome.NodeCount + 1];
             System.Array.Copy(genome.nodes, newNodes, genome.NodeCount);
             newNodes[genome.NodeCount] = newNode;

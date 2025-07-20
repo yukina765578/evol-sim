@@ -12,7 +12,8 @@ namespace EvolutionSimulator.Creatures.Genetics
         // Neural Network Parameters
         // 6 inputs -> 2 outputs = 2 perceptrons x 7 values (6 weights + 1 bias)
         public float[] segmentBrainWeights; // 14 values
-        public NodeGene(int parent, float angle, float speed, float max, float ratio)
+
+        public NodeGene(int parent, float angle, float max)
         {
             parentIndex = parent;
             if (parent == -1)

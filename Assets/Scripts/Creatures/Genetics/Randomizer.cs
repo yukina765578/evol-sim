@@ -45,7 +45,7 @@ namespace EvolutionSimulator.Creatures.Genetics
             }
         }
 
-        static void InitializeSegmentBrainWeights(ref NodeGene node)
+        public static void InitializeSegmentBrainWeights(ref NodeGene node)
         {
             for (int i = 0; i < GeneticsConstants.SEGMENT_BRAIN_WEIGHTS; i++)
             {

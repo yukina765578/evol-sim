@@ -18,11 +18,11 @@ namespace EvolutionSimulator.Creatures.Test
         [SerializeField]
         private NodeGene[] testNodes = new NodeGene[]
         {
-            new NodeGene(-1, 0f, 0f, 0f, 0f), // Root node (no movement)
-            new NodeGene(0, 0f, 3f, 45f, 0.2f), // Connect to root
-            new NodeGene(0, 120f, 3.5f, -45f, 0.6f), // Also connect to root
-            new NodeGene(1, 45f, 4f, -60f, 0.5f), // Connect to node 1
-            new NodeGene(2, 180f, 2.5f, 120f, 0.3f), // Connect to node 2
+            new NodeGene(-1, 0f, 0f), // Root node (no movement)
+            new NodeGene(0, 0f, 45f), // Connect to root
+            new NodeGene(0, 120f, -45f), // Also connect to root
+            new NodeGene(1, 45f, -60f), // Connect to node 1
+            new NodeGene(2, 180f, 120f), // Connect to node 2
         };
 
         private GameObject currentCreature;
