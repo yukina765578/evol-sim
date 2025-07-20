@@ -24,6 +24,11 @@ namespace EvolutionSimulator.Creatures.Core
         private float startTime;
         private const float STARTUP_DELAY = 5f;
         private bool canApplyThrust = false;
+        private const float VELOCITY_FREEZE_DURATION = 0.5f;
+        private const float DEBUG_DURATION = 1f;
+        private bool isSpawnedCreature = false;
+
+        public bool IsSpawnedCreature => isSpawnedCreature;
 
         public CreatureGenome GetGenome() => genome;
 
@@ -35,6 +40,7 @@ namespace EvolutionSimulator.Creatures.Core
                 Debug.LogError("CreatureController requires a valid CreatureGenome!");
                 return;
             }
+            startTime = Time.time;
         }
 
         void Start()
@@ -49,6 +55,24 @@ namespace EvolutionSimulator.Creatures.Core
             {
                 canApplyThrust = true;
             }
+
+            // スポーン物理制御 - 既存のタイミングシステム使用
+            if (isSpawnedCreature)
+            {
+                float spawnElapsed = Time.time - startTime;
+
+                if (spawnElapsed < VELOCITY_FREEZE_DURATION)
+                {
+                    creatureRigidbody.linearVelocity = Vector2.zero;
+                    creatureRigidbody.angularVelocity = 0f;
+                }
+
+                if (spawnElapsed >= DEBUG_DURATION)
+                {
+                    isSpawnedCreature = false;
+                }
+            }
+
             UpdateSegmentRotations();
             if (canApplyThrust)
             {
@@ -61,6 +85,11 @@ namespace EvolutionSimulator.Creatures.Core
                 if (showVelocityDebug)
                     UpdateVelocityDebug();
             }
+        }
+
+        public void SetSpawnedCreature(bool isSpawned)
+        {
+            isSpawnedCreature = isSpawned;
         }
 
         void SetupComponents()

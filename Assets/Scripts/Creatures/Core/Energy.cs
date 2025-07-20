@@ -14,7 +14,7 @@ namespace EvolutionSimulator.Creatures.Core
         private float age = 0f; // Starting age
 
         private float maxEnergy = 100f;
-        private float basalConstant = 0.1f;
+        private float basalConstant = 1f;
         private float movementConstant = 0.01f;
         private float powerExponent = 2f;
         private float maxAge = 300f; // 5 minutes

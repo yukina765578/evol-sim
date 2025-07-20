@@ -526,7 +526,6 @@ GameObject:
   - component: {fileID: 1348387816}
   - component: {fileID: 1348387817}
   - component: {fileID: 1348387818}
-  - component: {fileID: 1348387819}
   - component: {fileID: 1348387823}
   - component: {fileID: 1348387820}
   - component: {fileID: 1348387821}
@@ -565,8 +564,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 300
-  height: 300
+  width: 400
+  height: 400
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -580,7 +579,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 
@@ -589,18 +588,6 @@ MonoBehaviour:
   showDebugValues: 0
   debugTextColor: {r: 1, g: 1, b: 1, a: 1}
   debugFontSize: 8
---- !u!114 &1348387819
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4897dcc359b5d5f4b9a6051ddfd0d020, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1348387820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -614,7 +601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   noiseSettings:
-    scale: 100
+    scale: 50
     threshold: 0.1
     offset: {x: 0, y: 0}
     animate: 0
@@ -640,10 +627,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initialPopulationSize: 200
-  maxPopulationSize: 617
+  initialPopulationSize: 300
+  maxPopulationSize: 600
   spawnOnStart: 1
-  enableAutoSpawn: 0
+  enableAutoSpawn: 1
   spawnInterval: 1
   totalCreatureSpawned: 0
   totalCreatureDeaths: 0
@@ -678,7 +665,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   energyValue: 10
   respawnDelay: 5
-  maxFoodPerCell: 3
+  maxFoodPerCell: 8
   foodSize: 1
   foodMaterial: {fileID: 2100000, guid: 09d148cc788c59644b890c57c760eb8d, type: 2}
   foodMesh: {fileID: 0}

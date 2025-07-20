@@ -20,7 +20,7 @@ namespace EvolutionSimulator.Creatures.Core
         private float forwardRatio;
         private float baseAngle;
 
-        private float thrustCoefficient = 15f;
+        private float thrustCoefficient = 30f;
 
         private bool debugMode = false;
         private Energy energy;

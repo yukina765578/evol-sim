@@ -106,6 +106,8 @@ namespace EvolutionSimulator.Creatures.Biology
             if (offspring != null)
             {
                 populationManager.RegisterExistingCreature(offspring);
+                Controller controller = offspring.GetComponent<Controller>();
+                controller.SetSpawnedCreature(true);
 
                 if (creatureEnergy != null)
                     creatureEnergy.ConsumeEnergy(reproductionEnergyCost);
