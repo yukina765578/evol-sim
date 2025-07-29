@@ -43,7 +43,7 @@ Material:
     m_Floats:
     - _EdgeSoftness: 0.02
     - _EnableExternalAlpha: 0
-    - _FoodSize: 1
+    - _FoodSize: 0.5
     - _ZWrite: 0
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

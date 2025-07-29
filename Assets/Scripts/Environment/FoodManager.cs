@@ -275,7 +275,7 @@ namespace EvolutionSimulator.Environment
             // Calculate saturation penalty
             float saturationPenalty = 1f - ((float)foodCountPerCell[cellIndex] / maxFoodPerCell);
 
-            return baseSpawnRate * noiseValue * saturationPenalty * Time.deltaTime;
+            return baseSpawnRate * noiseValue * noiseValue * saturationPenalty * Time.deltaTime;
         }
 
         void SpawnFoodInCell(int cellIndex)

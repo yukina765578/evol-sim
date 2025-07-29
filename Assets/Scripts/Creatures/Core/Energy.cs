@@ -17,7 +17,7 @@ namespace EvolutionSimulator.Creatures.Core
         private float basalConstant = 1f;
         private float movementConstant = 0.01f;
         private float powerExponent = 2f;
-        private float maxAge = 300f; // 5 minutes
+        private float maxAge = 3000f; // 5 minutes
         private float reproductionThreshold = 80f;
         private bool reproductionReady = false;
 
@@ -63,7 +63,7 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateEnergy()
         {
-            float basalEnergy = basalConstant * segmentCount;
+            float basalEnergy = basalConstant * (segmentCount * segmentCount);
             ConsumeEnergy(basalEnergy * Time.deltaTime);
         }
 
