@@ -4,9 +4,9 @@ namespace EvolutionSimulator.Creatures.Genetics
 {
     public static class Randomizer
     {
-        public static CreatureGenome GenerateRandomGenome()
+        public static CreatureGenome GenerateRandomGenome(int min_nodes = GeneticsConstants.MIN_NODES, int max_nodes = GeneticsConstants.MAX_NODES)
         {
-            int nodeCount = Random.Range(GeneticsConstants.MIN_NODES, GeneticsConstants.MAX_NODES);
+            int nodeCount = Random.Range(min_nodes, max_nodes);
             NodeGene[] nodes = new NodeGene[nodeCount];
 
             nodes[0] = new NodeGene(-1, 0f, 0f, 0f, 0f);

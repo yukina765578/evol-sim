@@ -29,7 +29,10 @@ namespace EvolutionSimulator.Creatures.Population
         public GameObject SpawnCreature(string creatureName = null)
         {
             Vector3 spawnPosition = GetValidSpawnPosition();
-            CreatureGenome genome = Randomizer.GenerateRandomGenome();
+            CreatureGenome genome = Randomizer.GenerateRandomGenome(
+                GeneticsConstants.MIN_NODES,
+                GeneticsConstants.MAX_NODES
+            );
             GameObject creature = Builder.BuildCreature(genome, spawnPosition);
 
             if (!string.IsNullOrEmpty(creatureName))

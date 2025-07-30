@@ -4,8 +4,6 @@ namespace EvolutionSimulator.Creatures.Core
 {
     public class Segment : MonoBehaviour
     {
-        private LineRenderer lineRenderer;
-        private LineRenderer thrustDebugLine;
         private float length = 2f;
         private float width = 0.1f;
         private Color segmentColor = Color.white;
@@ -21,25 +19,9 @@ namespace EvolutionSimulator.Creatures.Core
         private float baseAngle;
 
         private float thrustCoefficient = 30f;
-
-        private bool debugMode = false;
         private Energy energy;
 
-        private Material lineRendererMaterial;
-        private Material thrustDebugMaterial;
-
-        void Awake()
-        {
-            SetupLineRenderer();
-            SetupDebugLine();
-        }
-
-        void Start()
-        {
-            energy = GetComponentInParent<Energy>();
-        }
-
-        public void Initialize(
+        public void InitializePhysicsOnly(
             float segmentLength,
             float segmentWidth,
             Color color,
@@ -62,67 +44,22 @@ namespace EvolutionSimulator.Creatures.Core
             parentNode = parent;
             childNode = child;
 
-            UpdateVisuals();
-        }
-
-        void SetupLineRenderer()
-        {
-            lineRenderer = GetComponent<LineRenderer>();
-            if (lineRenderer == null)
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
-
-            lineRendererMaterial = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.material = lineRendererMaterial;
-            lineRenderer.positionCount = 2;
-            lineRenderer.useWorldSpace = true;
-            lineRenderer.sortingOrder = 0;
-        }
-
-        void SetupDebugLine()
-        {
-            GameObject debugObj = new GameObject("ThrustDebug");
-            debugObj.transform.SetParent(transform);
-
-            thrustDebugLine = debugObj.AddComponent<LineRenderer>();
-            thrustDebugMaterial = new Material(Shader.Find("Sprites/Default"));
-            thrustDebugLine.material = thrustDebugMaterial;
-            thrustDebugLine.positionCount = 2;
-            thrustDebugLine.useWorldSpace = true;
-            thrustDebugLine.sortingOrder = 5;
-            thrustDebugLine.startWidth = 0.05f;
-            thrustDebugLine.endWidth = 0.05f;
-            thrustDebugLine.enabled = false;
-            thrustDebugLine.startColor = Color.red;
-            thrustDebugLine.endColor = Color.red;
-        }
-
-        void UpdateVisuals()
-        {
-            if (lineRenderer != null)
-            {
-                lineRenderer.startColor = segmentColor;
-                lineRenderer.endColor = segmentColor;
-                lineRenderer.startWidth = width;
-                lineRenderer.endWidth = width;
-            }
-        }
-
-        public void SetDebugMode(bool enabled)
-        {
-            debugMode = enabled;
-            if (thrustDebugLine != null)
-                thrustDebugLine.enabled = enabled;
+            energy = GetComponentInParent<Energy>();
         }
 
         public void UpdateRotation(float accumulatedAngle = 0f, float phaseOffset = 0f)
         {
-            if (lineRenderer == null || parentNode == null || childNode == null)
-                Debug.LogError("LineRenderer or Nodes not set up correctly in Segment.");
+            if (parentNode == null || childNode == null)
+            {
+                Debug.LogError("Parent or child node missing in Segment");
+                return;
+            }
 
-            // Calculate the angle based on oscillation speed and phase offset
+            // Calculate oscillation
             prevAngle = currentAngle;
             float cycleTime = (Time.time / oscillationSpeed + phaseOffset) % oscillationSpeed;
             float modifiedT;
+
             if (cycleTime < oscillationSpeed * forwardRatio)
             {
                 modifiedT = (cycleTime / (oscillationSpeed * forwardRatio)) * Mathf.PI;
@@ -136,9 +73,14 @@ namespace EvolutionSimulator.Creatures.Core
 
             currentAngle = ((Mathf.Sin(modifiedT - Mathf.PI / 2f) + 1f) / 2f) * maxAngle;
 
+            // Consume energy based on movement
             float angleChange = Mathf.Abs(currentAngle - prevAngle);
-            energy.ConsumeMovementEnergy(angleChange);
+            if (energy != null)
+            {
+                energy.ConsumeMovementEnergy(angleChange);
+            }
 
+            // Update child node position
             Vector3 anchorPosition = parentNode.transform.position;
             Vector3 childPosition =
                 anchorPosition
@@ -149,74 +91,59 @@ namespace EvolutionSimulator.Creatures.Core
                         * Mathf.Sin((baseAngle + accumulatedAngle + currentAngle) * Mathf.Deg2Rad),
                     0f
                 );
-            lineRenderer.SetPosition(0, anchorPosition);
-            lineRenderer.SetPosition(1, childPosition);
+
             childNode.transform.position = childPosition;
         }
 
         public Vector2 GetThrust()
         {
+            if (parentNode == null || childNode == null)
+                return Vector2.zero;
+
             Vector2 parentDelta = parentNode.GetPositionDelta();
             Vector2 childDelta = childNode.GetPositionDelta();
             Vector2 thrust = (childDelta + parentDelta) * 0.5f;
             Vector2 thrustDirection = -thrust.normalized;
 
             float thrustMagnitude = Mathf.Pow(thrust.magnitude, 1.5f) * thrustCoefficient;
-            Vector2 result = thrustDirection * thrustMagnitude;
-
-            if (debugMode && thrustDebugLine != null)
-            {
-                UpdateThrustDebugLine(thrustDirection, thrustMagnitude);
-            }
-
-            return result;
+            return thrustDirection * thrustMagnitude;
         }
 
         public Vector2 GetWaterDrag(Vector2 velocity, float maxDrag)
         {
-            if (velocity.magnitude < 0.01f)
+            if (velocity.magnitude < 0.01f || parentNode == null || childNode == null)
             {
                 return Vector2.zero;
             }
+
             Vector2 segmentDirection = (
                 childNode.transform.position - parentNode.transform.position
             ).normalized;
             float angle = Vector2.Angle(segmentDirection, velocity.normalized);
             float normalizedAngle = angle / 90f;
             float dragMagnitude = Mathf.Lerp(0.1f, maxDrag, normalizedAngle);
-            Vector2 dragForce = -velocity.normalized * dragMagnitude;
-            return dragForce;
+
+            return -velocity.normalized * dragMagnitude;
         }
 
-        void UpdateThrustDebugLine(Vector2 thrustDirection, float thrustMagnitude)
+        public Node GetParentNode()
         {
-            Vector3 segmentCenter =
-                (parentNode.transform.position + childNode.transform.position) / 2f;
-            Vector3 thrustEnd = segmentCenter + (Vector3)(thrustDirection * thrustMagnitude * 5f);
-            thrustDebugLine.SetPosition(0, segmentCenter);
-            thrustDebugLine.SetPosition(1, thrustEnd);
+            return parentNode;
         }
 
-        void OnDestroy()
+        public Node GetChildNode()
         {
-            if (lineRenderer != null)
-            {
-                Destroy(lineRendererMaterial);
-                lineRendererMaterial = null;
-            }
-            if (thrustDebugLine != null)
-            {
-                Destroy(thrustDebugMaterial);
-                thrustDebugMaterial = null;
-            }
+            return childNode;
         }
 
-        void OnValidate()
+        public float GetWidth()
         {
-            if (Application.isPlaying)
-            {
-                UpdateVisuals();
-            }
+            return width;
+        }
+
+        public Color GetColor()
+        {
+            return segmentColor;
         }
     }
 }

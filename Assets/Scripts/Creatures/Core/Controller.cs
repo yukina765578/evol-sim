@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using EvolutionSimulator.Creatures.Genetics;
+using EvolutionSimulator.Creatures.Rendering;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creatures.Core
@@ -14,39 +15,44 @@ namespace EvolutionSimulator.Creatures.Core
         private bool showVelocityDebug = false;
 
         private CreatureGenome genome;
-        private bool prevThrustDebug = false;
+        private CreatureRenderData renderData;
         private bool isDead = false;
 
         private Rigidbody2D creatureRigidbody;
         private List<Segment> segments = new List<Segment>();
-        private LineRenderer velocityDebugLine;
+        private List<Node> nodes = new List<Node>();
 
         private float startTime;
         private const float STARTUP_DELAY = 5f;
         private bool canApplyThrust = false;
         private const float VELOCITY_FREEZE_DURATION = 0.5f;
-        private const float DEBUG_DURATION = 1f;
         private bool isSpawnedCreature = false;
 
         public bool IsSpawnedCreature => isSpawnedCreature;
 
         public CreatureGenome GetGenome() => genome;
 
+        public CreatureRenderData GetRenderData() => renderData;
+
         public void Initialize(CreatureGenome creatureGenome)
         {
             genome = creatureGenome;
             if (genome == null)
             {
-                Debug.LogError("CreatureController requires a valid CreatureGenome!");
+                Debug.LogError("Controller requires valid CreatureGenome!");
                 return;
             }
             startTime = Time.time;
         }
 
+        public void SetRenderData(CreatureRenderData data)
+        {
+            renderData = data;
+        }
+
         void Start()
         {
             SetupComponents();
-            SetupVelocityDebug();
         }
 
         void Update()
@@ -56,18 +62,15 @@ namespace EvolutionSimulator.Creatures.Core
                 canApplyThrust = true;
             }
 
-            // スポーン物理制御 - 既存のタイミングシステム使用
             if (isSpawnedCreature)
             {
                 float spawnElapsed = Time.time - startTime;
-
                 if (spawnElapsed < VELOCITY_FREEZE_DURATION)
                 {
                     creatureRigidbody.linearVelocity = Vector2.zero;
                     creatureRigidbody.angularVelocity = 0f;
                 }
-
-                if (spawnElapsed >= DEBUG_DURATION)
+                if (spawnElapsed >= 1f)
                 {
                     isSpawnedCreature = false;
                 }
@@ -77,14 +80,8 @@ namespace EvolutionSimulator.Creatures.Core
             if (canApplyThrust)
             {
                 ApplyThrust();
-                if (showThrustDebug != prevThrustDebug)
-                {
-                    UpdateSegmentDebug();
-                    prevThrustDebug = showThrustDebug;
-                }
-                if (showVelocityDebug)
-                    UpdateVelocityDebug();
             }
+            UpdateRenderData();
         }
 
         public void SetSpawnedCreature(bool isSpawned)
@@ -100,23 +97,7 @@ namespace EvolutionSimulator.Creatures.Core
 
             creatureRigidbody.gravityScale = 0f;
             segments.AddRange(GetComponentsInChildren<Segment>());
-        }
-
-        void SetupVelocityDebug()
-        {
-            GameObject debugObj = new GameObject("VelocityDebug");
-            debugObj.transform.SetParent(transform);
-
-            velocityDebugLine = debugObj.AddComponent<LineRenderer>();
-            velocityDebugLine.material = new Material(Shader.Find("Sprites/Default"));
-            velocityDebugLine.positionCount = 2;
-            velocityDebugLine.useWorldSpace = true;
-            velocityDebugLine.sortingOrder = 10;
-            velocityDebugLine.startWidth = 0.1f;
-            velocityDebugLine.endWidth = 0.1f;
-            velocityDebugLine.startColor = Color.red;
-            velocityDebugLine.endColor = Color.red;
-            velocityDebugLine.enabled = showVelocityDebug;
+            nodes.AddRange(GetComponentsInChildren<Node>());
         }
 
         void UpdateSegmentRotations()
@@ -124,14 +105,6 @@ namespace EvolutionSimulator.Creatures.Core
             foreach (Segment segment in segments)
             {
                 segment.UpdateRotation();
-            }
-        }
-
-        void UpdateSegmentDebug()
-        {
-            foreach (Segment segment in segments)
-            {
-                segment.SetDebugMode(showThrustDebug);
             }
         }
 
@@ -157,34 +130,57 @@ namespace EvolutionSimulator.Creatures.Core
             }
         }
 
-        void UpdateVelocityDebug()
+        void UpdateRenderData()
         {
-            if (velocityDebugLine == null || segments.Count == 0)
-            {
-                Debug.LogError(
-                    "VelocityDebugLine or segments not set up correctly in CreatureController."
-                );
+            if (renderData == null)
                 return;
-            }
-            velocityDebugLine.enabled = showVelocityDebug;
 
-            if (showVelocityDebug)
+            // Update root position
+            renderData.rootPosition = transform.position;
+
+            // Update node world positions
+            for (int i = 0; i < nodes.Count && i < renderData.nodes.Length; i++)
             {
-                Vector2 velocity = creatureRigidbody.linearVelocity;
-                Vector3 rootPosition = transform.position;
-                Vector3 startPosition = rootPosition + (Vector3)velocity.normalized * 1.2f;
-                Vector3 endPosition = startPosition + (Vector3)velocity * 2f;
+                renderData.nodes[i].worldPosition = nodes[i].transform.position;
 
-                velocityDebugLine.SetPosition(0, startPosition);
-                velocityDebugLine.SetPosition(1, endPosition);
+                // Update color based on energy state
+                var energy = GetComponent<Energy>();
+                if (energy != null && energy.IsReproductionReady)
+                {
+                    renderData.nodes[i].color = Color.red;
+                }
+                else
+                {
+                    renderData.nodes[i].color = Color.blue;
+                }
+            }
+
+            // Update segment endpoints
+            for (int i = 0; i < segments.Count && i < renderData.segments.Length; i++)
+            {
+                var segment = segments[i];
+                var parentNode = segment.GetParentNode();
+                var childNode = segment.GetChildNode();
+
+                if (parentNode != null && childNode != null)
+                {
+                    renderData
+                        .segments[i]
+                        .UpdatePoints(parentNode.transform.position, childNode.transform.position);
+                }
             }
         }
 
         public void HandleDeath(string cause)
         {
             if (isDead)
-                return; // Prevent multiple calls
+                return;
             isDead = true;
+
+            if (renderData != null)
+            {
+                renderData.isAlive = false;
+            }
 
             Destroy(gameObject);
         }

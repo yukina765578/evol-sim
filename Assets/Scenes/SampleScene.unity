@@ -157,25 +157,20 @@ MonoBehaviour:
     maxAngle: 0
     forwardRatio: 0
   - parentIndex: 0
-    baseAngle: 0
+    baseAngle: 30
     oscSpeed: 3
     maxAngle: 45
     forwardRatio: 0.5
-  - parentIndex: 0
-    baseAngle: 120
+  - parentIndex: 1
+    baseAngle: 90
     oscSpeed: 3.5
     maxAngle: -45
-    forwardRatio: 0.5
-  - parentIndex: 1
-    baseAngle: 45
-    oscSpeed: 4
-    maxAngle: -60
-    forwardRatio: 0.5
-  - parentIndex: 2
+    forwardRatio: 0.3
+  - parentIndex: 0
     baseAngle: 180
-    oscSpeed: 2.5
-    maxAngle: 120
-    forwardRatio: 0.5
+    oscSpeed: 2
+    maxAngle: -60
+    forwardRatio: 0.2
 --- !u!4 &93079343
 Transform:
   m_ObjectHideFlags: 0
@@ -360,7 +355,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0.1509434, a: 0.9254902}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -564,8 +559,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34a2335ca0876104b9843360bdef83d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 200
-  height: 200
+  width: 250
+  height: 250
   drawBoundary: 0
   borderColor: {r: 1, g: 1, b: 1, a: 1}
   borderThickness: 0.5
@@ -607,10 +602,10 @@ MonoBehaviour:
     animate: 0
     animationSpeed: 0.1
     contrast: 2
-    gridWidth: 50
-    gridHeight: 50
+    gridWidth: 100
+    gridHeight: 100
     lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
-    highDensityColor: {r: 1, g: 0, b: 0, a: 0.5}
+    highDensityColor: {r: 0, g: 0.5254902, b: 0, a: 0.3647059}
   randomizeOnStart: 1
   OnNoiseUpdated:
     m_PersistentCalls:
@@ -663,14 +658,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f521b9cbf91e7e74dbde681fe9b39ca1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyValue: 20
+  energyValue: 3
   maxFoodPerCell: 5
   foodSize: 0.5
-  baseSpawnRate: 1
-  minSpawnInterval: 5
+  baseSpawnRate: 0.5
+  minSpawnInterval: 1
   foodMaterial: {fileID: 2100000, guid: 09d148cc788c59644b890c57c760eb8d, type: 2}
   foodMesh: {fileID: 0}
-  gridResolution: 50
+  gridResolution: 100
   detectionRadius: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

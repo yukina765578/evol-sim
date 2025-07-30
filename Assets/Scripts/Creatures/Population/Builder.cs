@@ -3,6 +3,7 @@ using EvolutionSimulator.Creatures.Biology;
 using EvolutionSimulator.Creatures.Core;
 using EvolutionSimulator.Creatures.Detectors;
 using EvolutionSimulator.Creatures.Genetics;
+using EvolutionSimulator.Creatures.Rendering;
 using UnityEngine;
 
 namespace EvolutionSimulator.Creatures.Population
@@ -20,7 +21,25 @@ namespace EvolutionSimulator.Creatures.Population
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
 
-            // Set tag safely
+            SetupCreatureGameObject(creatureObj);
+            AddPhysicsComponents(creatureObj);
+            AddBiologyComponents(creatureObj);
+
+            var (nodes, segments) = CreatePhysicsStructure(genome, creatureObj);
+            SetupDetectors(nodes[0]);
+
+            var controller = creatureObj.AddComponent<Controller>();
+            controller.Initialize(genome);
+
+            // Create render data
+            var renderData = CreateRenderData(genome, nodes, segments);
+            controller.SetRenderData(renderData);
+
+            return creatureObj;
+        }
+
+        static void SetupCreatureGameObject(GameObject creatureObj)
+        {
             try
             {
                 creatureObj.tag = "Creature";
@@ -33,61 +52,29 @@ namespace EvolutionSimulator.Creatures.Population
             int creatureLayer = LayerMask.NameToLayer("Creatures");
             if (creatureLayer == -1)
             {
-                Debug.LogWarning("Create 'Creature' layer in Layer Manager");
+                Debug.LogWarning("Create 'Creatures' layer in Layer Manager");
             }
             else
             {
                 creatureObj.layer = creatureLayer;
             }
+        }
 
-            // Add physics component
+        static void AddPhysicsComponents(GameObject creatureObj)
+        {
             var rigidbody = creatureObj.AddComponent<Rigidbody2D>();
             rigidbody.gravityScale = 0f;
             rigidbody.linearVelocity = Vector2.zero;
             rigidbody.angularVelocity = 0f;
-
-            // Add energy system
-            var energy = creatureObj.AddComponent<Energy>();
-
-            var reproductionController = creatureObj.AddComponent<ReproductionController>();
-
-            // Build creature body
-            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
-
-            SetupDetectioNode(nodes[0]);
-
-            // Add controller last (after body is built)
-            var controller = creatureObj.AddComponent<Controller>();
-            controller.Initialize(genome);
-
-            return creatureObj;
         }
 
-        static void SetupDetectioNode(Node detectionNode)
+        static void AddBiologyComponents(GameObject creatureObj)
         {
-            GameObject nodeObj = detectionNode.gameObject;
-
-            // Add Kinematic Rigidbody2D to parent node
-            var nodeRigidbody = nodeObj.AddComponent<Rigidbody2D>();
-            nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
-            nodeRigidbody.gravityScale = 0f;
-
-            // Create separate child for food detection
-            GameObject foodDetectorObj = new GameObject("FoodDetector");
-            foodDetectorObj.transform.SetParent(nodeObj.transform);
-            foodDetectorObj.transform.localPosition = Vector3.zero;
-            foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
-            foodDetectorObj.AddComponent<FoodDetector>();
-
-            // Create separate child for creature detection
-            GameObject creatureDetectorObj = new GameObject("CreatureDetector");
-            creatureDetectorObj.transform.SetParent(nodeObj.transform);
-            creatureDetectorObj.transform.localPosition = Vector3.zero;
-            creatureDetectorObj.layer = LayerMask.NameToLayer("Creatures");
-            creatureDetectorObj.AddComponent<CreatureDetector>();
+            creatureObj.AddComponent<Energy>();
+            creatureObj.AddComponent<ReproductionController>();
         }
 
-        static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
+        static (List<Node> nodes, List<Segment> segments) CreatePhysicsStructure(
             CreatureGenome genome,
             GameObject creatureObj
         )
@@ -96,7 +83,7 @@ namespace EvolutionSimulator.Creatures.Population
             var segments = new List<Segment>();
 
             // Create root node
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
+            Node rootNode = CreatePhysicsNode("RootNode", Vector3.zero, creatureObj.transform);
             nodes.Add(rootNode);
 
             // Create child nodes and segments
@@ -112,14 +99,13 @@ namespace EvolutionSimulator.Creatures.Population
                     + new Vector3(
                         SEGMENT_LENGTH * Mathf.Cos(angle),
                         SEGMENT_LENGTH * Mathf.Sin(angle),
-                        0
+                        0f
                     );
 
-                // Create node and segment
-                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
+                Node newNode = CreatePhysicsNode($"Node_{i}", nodePosition, creatureObj.transform);
                 nodes.Add(newNode);
 
-                Segment newSegment = CreateSegment(
+                Segment newSegment = CreatePhysicsSegment(
                     $"Segment_{i}",
                     nodeGenome,
                     parentNode,
@@ -132,18 +118,18 @@ namespace EvolutionSimulator.Creatures.Population
             return (nodes, segments);
         }
 
-        static Node CreateNode(string name, Vector3 position, Transform parent)
+        static Node CreatePhysicsNode(string name, Vector3 position, Transform parent)
         {
             GameObject nodeObj = new GameObject(name);
             nodeObj.transform.SetParent(parent);
             nodeObj.transform.localPosition = position;
 
             var node = nodeObj.AddComponent<Node>();
-            node.Initialize(NODE_SIZE, NODE_COLOR);
+            node.InitializePhysicsOnly(NODE_SIZE, NODE_COLOR);
             return node;
         }
 
-        static Segment CreateSegment(
+        static Segment CreatePhysicsSegment(
             string name,
             NodeGene gene,
             Node parentNode,
@@ -155,19 +141,76 @@ namespace EvolutionSimulator.Creatures.Population
             segmentObj.transform.SetParent(parent);
 
             var segment = segmentObj.AddComponent<Segment>();
-            segment.Initialize(
+            segment.InitializePhysicsOnly(
                 SEGMENT_LENGTH,
                 SEGMENT_WIDTH,
                 SEGMENT_COLOR,
                 gene.oscSpeed,
                 gene.maxAngle,
                 gene.forwardRatio,
-                gene.baseAngle, // Fixed: Added missing baseAngle parameter
+                gene.baseAngle,
                 parentNode,
                 childNode
             );
 
             return segment;
+        }
+
+        static void SetupDetectors(Node rootNode)
+        {
+            GameObject nodeObj = rootNode.gameObject;
+
+            var nodeRigidbody = nodeObj.AddComponent<Rigidbody2D>();
+            nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
+            nodeRigidbody.gravityScale = 0f;
+
+            // Food detector
+            GameObject foodDetectorObj = new GameObject("FoodDetector");
+            foodDetectorObj.transform.SetParent(nodeObj.transform);
+            foodDetectorObj.transform.localPosition = Vector3.zero;
+            foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            foodDetectorObj.AddComponent<FoodDetector>();
+
+            // Creature detector
+            GameObject creatureDetectorObj = new GameObject("CreatureDetector");
+            creatureDetectorObj.transform.SetParent(nodeObj.transform);
+            creatureDetectorObj.transform.localPosition = Vector3.zero;
+            creatureDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            creatureDetectorObj.AddComponent<CreatureDetector>();
+        }
+
+        static CreatureRenderData CreateRenderData(
+            CreatureGenome genome,
+            List<Node> nodes,
+            List<Segment> segments
+        )
+        {
+            // Create node data
+            NodeData[] nodeData = new NodeData[nodes.Count];
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                nodeData[i] = new NodeData(
+                    nodes[i].transform.localPosition,
+                    NODE_SIZE,
+                    NODE_COLOR,
+                    i == 0 ? -1 : genome.nodes[i].parentIndex
+                );
+            }
+
+            // Create segment data
+            SegmentData[] segmentData = new SegmentData[segments.Count];
+            for (int i = 0; i < segments.Count; i++)
+            {
+                NodeGene nodeGene = genome.nodes[i + 1]; // segments start from node 1
+                segmentData[i] = new SegmentData(
+                    nodeGene.parentIndex,
+                    i + 1,
+                    SEGMENT_WIDTH,
+                    SEGMENT_COLOR
+                );
+            }
+
+            return new CreatureRenderData(nodeData, segmentData);
         }
     }
 }
