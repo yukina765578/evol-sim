@@ -20,7 +20,7 @@ namespace EvolutionSimulator.Creatures.Population
             GameObject creatureObj = new GameObject("Creature");
             creatureObj.transform.position = position;
 
-            // Set tag safely
+            // Set tag and layer safely
             try
             {
                 creatureObj.tag = "Creature";
@@ -50,10 +50,19 @@ namespace EvolutionSimulator.Creatures.Population
             var energy = creatureObj.AddComponent<Energy>();
             var reproductionController = creatureObj.AddComponent<ReproductionController>();
 
-            // Build creature body with data-only segments
-            var (nodes, segmentRenderer) = CreateSequentialCreature(genome, creatureObj);
+            // Calculate initial node positions (data-only)
+            Vector3[] initialNodePositions = CalculateInitialNodePositions(genome);
 
-            SetupDetectioNode(nodes[0]);
+            // Create SegmentRenderer with position data
+            var segmentRenderer = creatureObj.AddComponent<SegmentRenderer>();
+            segmentRenderer.Initialize(genome, initialNodePositions);
+
+            // Create NodeRenderer for visual nodes
+            var nodeRenderer = creatureObj.AddComponent<NodeRenderer>();
+            nodeRenderer.Initialize(genome.NodeCount);
+
+            // Setup detectors on main creature
+            SetupDetectors(creatureObj);
 
             // Add controller last (after body is built)
             var controller = creatureObj.AddComponent<Controller>();
@@ -62,78 +71,56 @@ namespace EvolutionSimulator.Creatures.Population
             return creatureObj;
         }
 
-        static (List<Node> nodes, SegmentRenderer segmentRenderer) CreateSequentialCreature(
-            CreatureGenome genome,
-            GameObject creatureObj
-        )
+        static Vector3[] CalculateInitialNodePositions(CreatureGenome genome)
         {
-            var nodes = new List<Node>();
+            Vector3[] positions = new Vector3[genome.NodeCount];
 
-            // Create root node
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
-            nodes.Add(rootNode);
+            // Root node at origin
+            positions[0] = Vector3.zero;
 
-            // Create child nodes (no individual segment GameObjects)
+            // Calculate child node positions based on genome
             for (int i = 1; i < genome.NodeCount; i++)
             {
                 NodeGene nodeGenome = genome.nodes[i];
-                Node parentNode = nodes[nodeGenome.parentIndex];
+                Vector3 parentPosition = positions[nodeGenome.parentIndex];
 
                 // Calculate child position based on base angle
                 float angle = nodeGenome.baseAngle * Mathf.Deg2Rad;
                 Vector3 nodePosition =
-                    parentNode.transform.localPosition
+                    parentPosition
                     + new Vector3(
                         SEGMENT_LENGTH * Mathf.Cos(angle),
                         SEGMENT_LENGTH * Mathf.Sin(angle),
                         0
                     );
 
-                // Create only the node - no segment GameObject
-                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
-                nodes.Add(newNode);
+                positions[i] = nodePosition;
             }
 
-            // Create and initialize SegmentRenderer with data
-            var segmentRenderer = creatureObj.AddComponent<SegmentRenderer>();
-            segmentRenderer.Initialize(genome, nodes.ToArray());
-
-            return (nodes, segmentRenderer);
+            return positions;
         }
 
-        static void SetupDetectioNode(Node detectionNode)
+        static void SetupDetectors(GameObject creatureObj)
         {
-            GameObject nodeObj = detectionNode.gameObject;
+            // Create Sensors container
+            GameObject sensorsContainer = new GameObject("Sensors");
+            sensorsContainer.transform.SetParent(creatureObj.transform);
+            sensorsContainer.transform.localPosition = Vector3.zero;
+            sensorsContainer.layer = creatureObj.layer;
 
-            // Add Kinematic Rigidbody2D to parent node
-            var nodeRigidbody = nodeObj.AddComponent<Rigidbody2D>();
-            nodeRigidbody.bodyType = RigidbodyType2D.Kinematic;
-            nodeRigidbody.gravityScale = 0f;
-
-            // Create separate child for food detection
+            // Create food detector
             GameObject foodDetectorObj = new GameObject("FoodDetector");
-            foodDetectorObj.transform.SetParent(nodeObj.transform);
+            foodDetectorObj.transform.SetParent(sensorsContainer.transform);
             foodDetectorObj.transform.localPosition = Vector3.zero;
-            foodDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            foodDetectorObj.layer = creatureObj.layer;
             foodDetectorObj.AddComponent<FoodDetector>();
 
-            // Create separate child for creature detection
+            // Create creature detector
             GameObject creatureDetectorObj = new GameObject("CreatureDetector");
-            creatureDetectorObj.transform.SetParent(nodeObj.transform);
+            creatureDetectorObj.transform.SetParent(sensorsContainer.transform);
             creatureDetectorObj.transform.localPosition = Vector3.zero;
-            creatureDetectorObj.layer = LayerMask.NameToLayer("Creatures");
+            creatureDetectorObj.layer = creatureObj.layer;
             creatureDetectorObj.AddComponent<CreatureDetector>();
-        }
-
-        static Node CreateNode(string name, Vector3 position, Transform parent)
-        {
-            GameObject nodeObj = new GameObject(name);
-            nodeObj.transform.SetParent(parent);
-            nodeObj.transform.localPosition = position;
-
-            var node = nodeObj.AddComponent<Node>();
-            node.Initialize(NODE_SIZE, NODE_COLOR);
-            return node;
         }
     }
 }

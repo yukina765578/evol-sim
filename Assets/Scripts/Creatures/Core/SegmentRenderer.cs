@@ -38,10 +38,12 @@ namespace EvolutionSimulator.Creatures.Core
 
         private Mesh segmentMesh;
         private SegmentData[] segments;
-        private Node[] nodes;
+        private Vector3[] nodePositions; // Data-only node positions
+        private Vector3[] prevNodePositions; // Previous positions for delta calculation
         private Matrix4x4[] matrices;
         private RenderParams renderParams;
         private int segmentCount;
+        private int nodeCount;
         private Energy energy;
 
         void Awake()
@@ -55,15 +57,41 @@ namespace EvolutionSimulator.Creatures.Core
             energy = GetComponent<Energy>();
         }
 
-        public void Initialize(CreatureGenome genome, Node[] creatureNodes)
+        public void Initialize(CreatureGenome genome, Vector3[] initialNodePositions)
         {
-            nodes = creatureNodes;
+            nodeCount = genome.NodeCount;
+            nodePositions = new Vector3[nodeCount];
+            prevNodePositions = new Vector3[nodeCount];
+
+            // Initialize positions in world space
+            nodePositions[0] = transform.position; // Root always at creature position
+            prevNodePositions[0] = nodePositions[0];
+
+            // Calculate initial child positions relative to current creature position
+            for (int i = 1; i < nodeCount; i++)
+            {
+                nodePositions[i] = transform.position + initialNodePositions[i];
+                prevNodePositions[i] = nodePositions[i];
+            }
+
             CreateSegmentData(genome);
             SetupRenderParams();
             InitializeMatrices();
 
             if (showSegmentCount)
                 Debug.Log($"SegmentRenderer initialized with {segmentCount} segments on {name}");
+        }
+
+        // Public methods for other components
+        public Vector3[] GetNodePositions() => nodePositions;
+
+        public int GetNodeCount() => nodeCount;
+
+        public Vector3 GetNodePositionDelta(int nodeIndex)
+        {
+            if (nodeIndex >= 0 && nodeIndex < nodeCount)
+                return nodePositions[nodeIndex] - prevNodePositions[nodeIndex];
+            return Vector3.zero;
         }
 
         void CreateSegmentData(CreatureGenome genome)
@@ -92,7 +120,7 @@ namespace EvolutionSimulator.Creatures.Core
                     childNodeIndex = i,
                     currentAngle = 0f,
                     prevAngle = 0f,
-                    thrustCoefficient = 30f,
+                    thrustCoefficient = 100f,
                 };
             }
         }
@@ -171,8 +199,11 @@ namespace EvolutionSimulator.Creatures.Core
 
         void Update()
         {
-            if (segments == null || nodes == null || segmentCount == 0)
+            if (segments == null || nodePositions == null || segmentCount == 0)
                 return;
+
+            // Store previous positions for delta calculation
+            System.Array.Copy(nodePositions, prevNodePositions, nodeCount);
 
             UpdateSegmentRotations();
             UpdateRenderMatrices();
@@ -181,6 +212,9 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateSegmentRotations()
         {
+            // FIRST: Update root node to follow creature transform
+            nodePositions[0] = transform.position;
+
             for (int i = 0; i < segmentCount; i++)
             {
                 var segment = segments[i];
@@ -211,10 +245,10 @@ namespace EvolutionSimulator.Creatures.Core
                 if (energy != null)
                     energy.ConsumeMovementEnergy(angleChange);
 
-                // Update child node position
-                if (segment.parentNodeIndex < nodes.Length && segment.childNodeIndex < nodes.Length)
+                // Update child node position directly in position array
+                if (segment.parentNodeIndex < nodeCount && segment.childNodeIndex < nodeCount)
                 {
-                    Vector3 parentPos = nodes[segment.parentNodeIndex].transform.position;
+                    Vector3 parentPos = nodePositions[segment.parentNodeIndex];
                     Vector3 childPos =
                         parentPos
                         + new Vector3(
@@ -228,7 +262,7 @@ namespace EvolutionSimulator.Creatures.Core
                                 ),
                             0f
                         );
-                    nodes[segment.childNodeIndex].transform.position = childPos;
+                    nodePositions[segment.childNodeIndex] = childPos;
                 }
 
                 segments[i] = segment; // Write back the struct
@@ -242,14 +276,11 @@ namespace EvolutionSimulator.Creatures.Core
             {
                 var segment = segments[i];
 
-                if (
-                    segment.parentNodeIndex >= nodes.Length
-                    || segment.childNodeIndex >= nodes.Length
-                )
+                if (segment.parentNodeIndex >= nodeCount || segment.childNodeIndex >= nodeCount)
                     continue;
 
-                Vector3 parentPos = nodes[segment.parentNodeIndex].transform.position;
-                Vector3 childPos = nodes[segment.childNodeIndex].transform.position;
+                Vector3 parentPos = nodePositions[segment.parentNodeIndex];
+                Vector3 childPos = nodePositions[segment.childNodeIndex];
 
                 Vector3 center = (parentPos + childPos) * 0.5f;
                 Vector3 direction = childPos - parentPos;
@@ -296,19 +327,15 @@ namespace EvolutionSimulator.Creatures.Core
             for (int i = 0; i < segmentCount; i++)
             {
                 var segment = segments[i];
-                if (
-                    segment.parentNodeIndex >= nodes.Length
-                    || segment.childNodeIndex >= nodes.Length
-                )
+                if (segment.parentNodeIndex >= nodeCount || segment.childNodeIndex >= nodeCount)
                     continue;
 
-                Vector2 parentDelta = nodes[segment.parentNodeIndex].GetPositionDelta();
-                Vector2 childDelta = nodes[segment.childNodeIndex].GetPositionDelta();
+                Vector2 parentDelta = GetNodePositionDelta(segment.parentNodeIndex);
+                Vector2 childDelta = GetNodePositionDelta(segment.childNodeIndex);
                 Vector2 thrust = (childDelta + parentDelta) * 0.5f;
                 Vector2 thrustDirection = -thrust.normalized;
 
-                float thrustMagnitude =
-                    Mathf.Pow(thrust.magnitude, 1.5f) * segment.thrustCoefficient;
+                float thrustMagnitude = Mathf.Pow(thrust.magnitude, 2f) * segment.thrustCoefficient;
                 totalThrust += thrustDirection * thrustMagnitude;
             }
 
@@ -325,14 +352,11 @@ namespace EvolutionSimulator.Creatures.Core
             for (int i = 0; i < segmentCount; i++)
             {
                 var segment = segments[i];
-                if (
-                    segment.parentNodeIndex >= nodes.Length
-                    || segment.childNodeIndex >= nodes.Length
-                )
+                if (segment.parentNodeIndex >= nodeCount || segment.childNodeIndex >= nodeCount)
                     continue;
 
-                Vector3 parentPos = nodes[segment.parentNodeIndex].transform.position;
-                Vector3 childPos = nodes[segment.childNodeIndex].transform.position;
+                Vector3 parentPos = nodePositions[segment.parentNodeIndex];
+                Vector3 childPos = nodePositions[segment.childNodeIndex];
                 Vector2 segmentDirection = (childPos - parentPos).normalized;
 
                 float angle = Vector2.Angle(segmentDirection, velocity.normalized);

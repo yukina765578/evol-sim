@@ -570,14 +570,13 @@ GameObject:
   - component: {fileID: 714367912}
   - component: {fileID: 714367911}
   - component: {fileID: 714367913}
-  - component: {fileID: 714367914}
   m_Layer: 0
   m_Name: Test
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &714367911
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -587,18 +586,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 714367910}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 73a95ad8d63219144822301c7e869bb7, type: 3}
+  m_Script: {fileID: 11500000, guid: 5080059834b15274d943992d122f8c09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   circleMaterial: {fileID: 2100000, guid: 41d5680ec1108b7488138add028735d9, type: 2}
   instanceCount: 100
-  circleSize: 1
+  circleSize: 0.5
   moveSpeed: 2
   spawnRadius: 10
-  quadMesh: {fileID: 0}
-  matrices: []
-  positions: []
-  velocities: []
 --- !u!4 &714367912
 Transform:
   m_ObjectHideFlags: 0
@@ -621,34 +616,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 714367910}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f78e28fa79199747854f96150b99d13, type: 3}
+  m_Script: {fileID: 11500000, guid: 2e24802d51ed4ba41a23b1db442ceefb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectCount: 2000
+  objectCount: 500
   circleMaterial: {fileID: 2100000, guid: 41d5680ec1108b7488138add028735d9, type: 2}
-  instanceCount: 100
+  instanceCount: 20
   circleSize: 0.5
   moveSpeed: 2
   spawnRadius: 10
-  objects: []
---- !u!114 &714367914
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 714367910}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17e468853eb181546897230616153f59, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  lineMaterial: {fileID: 2100000, guid: 1d260517dc1e80b4297f71e44147ee2a, type: 2}
-  lineCount: 50
-  spawnRadius: 10
-  lineThickness: 0.3
 --- !u!1 &1348387814
 GameObject:
   m_ObjectHideFlags: 0
@@ -670,7 +648,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1348387816
 Transform:
   m_ObjectHideFlags: 0
@@ -713,7 +691,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a68baec04b7dcb14e84d7e301a5a393b, type: 3}
   m_Name: 
@@ -744,7 +722,7 @@ MonoBehaviour:
     gridWidth: 200
     gridHeight: 200
     lowDensityColor: {r: 0, g: 0, b: 0, a: 0}
-    highDensityColor: {r: 1, g: 0, b: 0, a: 0.5}
+    highDensityColor: {r: 0, g: 0.61635214, b: 0.15941423, a: 0.5}
   randomizeOnStart: 1
   OnNoiseUpdated:
     m_PersistentCalls:
@@ -756,13 +734,13 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1348387814}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 38c0b4e7b1458a24fa1d0e93443e1b9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   initialPopulationSize: 500
-  maxPopulationSize: 500
+  maxPopulationSize: 1000
   spawnOnStart: 1
   enableAutoSpawn: 1
   spawnInterval: 1
@@ -797,15 +775,95 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f521b9cbf91e7e74dbde681fe9b39ca1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  energyValue: 20
-  maxFoodPerCell: 5
+  energyValue: 6
+  maxFoodPerCell: 3
   foodSize: 0.5
-  baseSpawnRate: 1
-  minSpawnInterval: 5
+  baseSpawnRate: 0.8
+  minSpawnInterval: 3
   foodMaterial: {fileID: 2100000, guid: 09d148cc788c59644b890c57c760eb8d, type: 2}
   foodMesh: {fileID: 0}
   gridResolution: 50
   detectionRadius: 1
+--- !u!1 &1668490134
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1668490136}
+  - component: {fileID: 1668490137}
+  - component: {fileID: 1668490138}
+  m_Layer: 0
+  m_Name: GameObject (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1668490136
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668490134}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.00087, y: 0.00305, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1668490137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668490134}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88f18b9c46f7bf247b3bb7cb196d1c86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rectangleMaterial: {fileID: 2100000, guid: 5d554514d05f1ca44b7f60790ef0b2ec, type: 2}
+  instanceCount: 50
+  spawnAreaSize: {x: 20, y: 15}
+  rectangleSize: {x: 0.5, y: 3}
+  rotationSpeedRange: {x: 10, y: 60}
+  randomizePivots: 1
+  showGizmos: 0
+--- !u!114 &1668490138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1668490134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54713b4442fc70242ac86f6f7f47f961, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectCount: 500
+  rectangleMaterial: {fileID: 2100000, guid: 5d554514d05f1ca44b7f60790ef0b2ec, type: 2}
+  instanceCount: 20
+  rectangleSize: {x: 1, y: 0.5}
+  spawnAreaSize: {x: 100, y: 100}
+  rotationSpeedRange: {x: 10, y: 60}
+  randomizePivots: 1
+  enableMovement: 0
+  moveSpeed: 2
+  moveRadius: 5
+  objectSpacing: 60
+  objectsPerRow: 10
+  varyInstanceCount: 0
+  instanceCountRange: {x: 50, y: 150}
+  varySizes: 0
+  sizeVariationRange: {x: 0.5, y: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -817,3 +875,4 @@ SceneRoots:
   - {fileID: 93079343}
   - {fileID: 197712941}
   - {fileID: 714367912}
+  - {fileID: 1668490136}

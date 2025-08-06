@@ -125,7 +125,7 @@ namespace EvolutionSimulator.Creatures.Core
             // Get total thrust and drag from SegmentRenderer
             Vector2 totalThrust = segmentRenderer.GetTotalThrust();
 
-            float maxTotalDrag = currentVelocity.magnitude * 0.3f;
+            float maxTotalDrag = currentVelocity.magnitude * 0.1f;
             float maxDragPerSegment =
                 genome.NodeCount > 1 ? maxTotalDrag / (genome.NodeCount - 1) : 0f;
             Vector2 totalDrag = segmentRenderer.GetTotalWaterDrag(
