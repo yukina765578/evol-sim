@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using EvolutionSimulator.Creatures.Genetics;
 using UnityEngine;
 
@@ -8,17 +7,13 @@ namespace EvolutionSimulator.Creatures.Core
     {
         [Header("Debug")]
         [SerializeField]
-        private bool showThrustDebug = false;
-
-        [SerializeField]
         private bool showVelocityDebug = false;
 
         private CreatureGenome genome;
-        private bool prevThrustDebug = false;
         private bool isDead = false;
 
         private Rigidbody2D creatureRigidbody;
-        private List<Segment> segments = new List<Segment>();
+        private SegmentRenderer segmentRenderer;
         private LineRenderer velocityDebugLine;
 
         private float startTime;
@@ -32,9 +27,11 @@ namespace EvolutionSimulator.Creatures.Core
 
         public CreatureGenome GetGenome() => genome;
 
-        public void Initialize(CreatureGenome creatureGenome)
+        public void Initialize(CreatureGenome creatureGenome, SegmentRenderer renderer = null)
         {
             genome = creatureGenome;
+            segmentRenderer = renderer;
+
             if (genome == null)
             {
                 Debug.LogError("CreatureController requires a valid CreatureGenome!");
@@ -56,7 +53,7 @@ namespace EvolutionSimulator.Creatures.Core
                 canApplyThrust = true;
             }
 
-            // スポーン物理制御 - 既存のタイミングシステム使用
+            // Spawn physics control
             if (isSpawnedCreature)
             {
                 float spawnElapsed = Time.time - startTime;
@@ -73,15 +70,11 @@ namespace EvolutionSimulator.Creatures.Core
                 }
             }
 
-            UpdateSegmentRotations();
+            // Note: Segment rotations now handled by SegmentRenderer automatically
+
             if (canApplyThrust)
             {
                 ApplyThrust();
-                if (showThrustDebug != prevThrustDebug)
-                {
-                    UpdateSegmentDebug();
-                    prevThrustDebug = showThrustDebug;
-                }
                 if (showVelocityDebug)
                     UpdateVelocityDebug();
             }
@@ -99,7 +92,10 @@ namespace EvolutionSimulator.Creatures.Core
                 creatureRigidbody = gameObject.AddComponent<Rigidbody2D>();
 
             creatureRigidbody.gravityScale = 0f;
-            segments.AddRange(GetComponentsInChildren<Segment>());
+
+            // Get SegmentRenderer if not provided
+            if (segmentRenderer == null)
+                segmentRenderer = GetComponent<SegmentRenderer>();
         }
 
         void SetupVelocityDebug()
@@ -119,36 +115,23 @@ namespace EvolutionSimulator.Creatures.Core
             velocityDebugLine.enabled = showVelocityDebug;
         }
 
-        void UpdateSegmentRotations()
-        {
-            foreach (Segment segment in segments)
-            {
-                segment.UpdateRotation();
-            }
-        }
-
-        void UpdateSegmentDebug()
-        {
-            foreach (Segment segment in segments)
-            {
-                segment.SetDebugMode(showThrustDebug);
-            }
-        }
-
         void ApplyThrust()
         {
-            Vector2 totalThrust = Vector2.zero;
-            Vector2 totalDrag = Vector2.zero;
+            if (segmentRenderer == null)
+                return;
 
             Vector2 currentVelocity = creatureRigidbody.linearVelocity;
-            float maxTotalDrag = currentVelocity.magnitude * 0.3f;
-            float maxDragPerSegment = maxTotalDrag / segments.Count;
 
-            foreach (Segment segment in segments)
-            {
-                totalThrust += segment.GetThrust();
-                totalDrag += segment.GetWaterDrag(currentVelocity, maxDragPerSegment);
-            }
+            // Get total thrust and drag from SegmentRenderer
+            Vector2 totalThrust = segmentRenderer.GetTotalThrust();
+
+            float maxTotalDrag = currentVelocity.magnitude * 0.3f;
+            float maxDragPerSegment =
+                genome.NodeCount > 1 ? maxTotalDrag / (genome.NodeCount - 1) : 0f;
+            Vector2 totalDrag = segmentRenderer.GetTotalWaterDrag(
+                currentVelocity,
+                maxDragPerSegment
+            );
 
             creatureRigidbody.AddForce(totalThrust, ForceMode2D.Force);
             if (totalDrag.magnitude > 0f)
@@ -159,13 +142,12 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateVelocityDebug()
         {
-            if (velocityDebugLine == null || segments.Count == 0)
+            if (velocityDebugLine == null)
             {
-                Debug.LogError(
-                    "VelocityDebugLine or segments not set up correctly in CreatureController."
-                );
+                Debug.LogError("VelocityDebugLine not set up correctly.");
                 return;
             }
+
             velocityDebugLine.enabled = showVelocityDebug;
 
             if (showVelocityDebug)
@@ -183,9 +165,8 @@ namespace EvolutionSimulator.Creatures.Core
         public void HandleDeath(string cause)
         {
             if (isDead)
-                return; // Prevent multiple calls
+                return;
             isDead = true;
-
             Destroy(gameObject);
         }
     }

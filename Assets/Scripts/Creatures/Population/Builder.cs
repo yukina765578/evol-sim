@@ -48,19 +48,57 @@ namespace EvolutionSimulator.Creatures.Population
 
             // Add energy system
             var energy = creatureObj.AddComponent<Energy>();
-
             var reproductionController = creatureObj.AddComponent<ReproductionController>();
 
-            // Build creature body
-            var (nodes, segments) = CreateSequentialCreature(genome, creatureObj);
+            // Build creature body with data-only segments
+            var (nodes, segmentRenderer) = CreateSequentialCreature(genome, creatureObj);
 
             SetupDetectioNode(nodes[0]);
 
             // Add controller last (after body is built)
             var controller = creatureObj.AddComponent<Controller>();
-            controller.Initialize(genome);
+            controller.Initialize(genome, segmentRenderer);
 
             return creatureObj;
+        }
+
+        static (List<Node> nodes, SegmentRenderer segmentRenderer) CreateSequentialCreature(
+            CreatureGenome genome,
+            GameObject creatureObj
+        )
+        {
+            var nodes = new List<Node>();
+
+            // Create root node
+            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
+            nodes.Add(rootNode);
+
+            // Create child nodes (no individual segment GameObjects)
+            for (int i = 1; i < genome.NodeCount; i++)
+            {
+                NodeGene nodeGenome = genome.nodes[i];
+                Node parentNode = nodes[nodeGenome.parentIndex];
+
+                // Calculate child position based on base angle
+                float angle = nodeGenome.baseAngle * Mathf.Deg2Rad;
+                Vector3 nodePosition =
+                    parentNode.transform.localPosition
+                    + new Vector3(
+                        SEGMENT_LENGTH * Mathf.Cos(angle),
+                        SEGMENT_LENGTH * Mathf.Sin(angle),
+                        0
+                    );
+
+                // Create only the node - no segment GameObject
+                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
+                nodes.Add(newNode);
+            }
+
+            // Create and initialize SegmentRenderer with data
+            var segmentRenderer = creatureObj.AddComponent<SegmentRenderer>();
+            segmentRenderer.Initialize(genome, nodes.ToArray());
+
+            return (nodes, segmentRenderer);
         }
 
         static void SetupDetectioNode(Node detectionNode)
@@ -87,51 +125,6 @@ namespace EvolutionSimulator.Creatures.Population
             creatureDetectorObj.AddComponent<CreatureDetector>();
         }
 
-        static (List<Node> nodes, List<Segment> segments) CreateSequentialCreature(
-            CreatureGenome genome,
-            GameObject creatureObj
-        )
-        {
-            var nodes = new List<Node>();
-            var segments = new List<Segment>();
-
-            // Create root node
-            Node rootNode = CreateNode("RootNode", Vector3.zero, creatureObj.transform);
-            nodes.Add(rootNode);
-
-            // Create child nodes and segments
-            for (int i = 1; i < genome.NodeCount; i++)
-            {
-                NodeGene nodeGenome = genome.nodes[i];
-                Node parentNode = nodes[nodeGenome.parentIndex];
-
-                // Calculate child position
-                float angle = nodeGenome.baseAngle * Mathf.Deg2Rad;
-                Vector3 nodePosition =
-                    parentNode.transform.localPosition
-                    + new Vector3(
-                        SEGMENT_LENGTH * Mathf.Cos(angle),
-                        SEGMENT_LENGTH * Mathf.Sin(angle),
-                        0
-                    );
-
-                // Create node and segment
-                Node newNode = CreateNode($"Node_{i}", nodePosition, creatureObj.transform);
-                nodes.Add(newNode);
-
-                Segment newSegment = CreateSegment(
-                    $"Segment_{i}",
-                    nodeGenome,
-                    parentNode,
-                    newNode,
-                    creatureObj.transform
-                );
-                segments.Add(newSegment);
-            }
-
-            return (nodes, segments);
-        }
-
         static Node CreateNode(string name, Vector3 position, Transform parent)
         {
             GameObject nodeObj = new GameObject(name);
@@ -141,33 +134,6 @@ namespace EvolutionSimulator.Creatures.Population
             var node = nodeObj.AddComponent<Node>();
             node.Initialize(NODE_SIZE, NODE_COLOR);
             return node;
-        }
-
-        static Segment CreateSegment(
-            string name,
-            NodeGene gene,
-            Node parentNode,
-            Node childNode,
-            Transform parent
-        )
-        {
-            GameObject segmentObj = new GameObject(name);
-            segmentObj.transform.SetParent(parent);
-
-            var segment = segmentObj.AddComponent<Segment>();
-            segment.Initialize(
-                SEGMENT_LENGTH,
-                SEGMENT_WIDTH,
-                SEGMENT_COLOR,
-                gene.oscSpeed,
-                gene.maxAngle,
-                gene.forwardRatio,
-                gene.baseAngle, // Fixed: Added missing baseAngle parameter
-                parentNode,
-                childNode
-            );
-
-            return segment;
         }
     }
 }
