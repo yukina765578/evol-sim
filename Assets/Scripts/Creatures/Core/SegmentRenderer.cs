@@ -237,6 +237,7 @@ namespace EvolutionSimulator.Creatures.Core
 
         void UpdateRenderMatrices()
         {
+            renderParams.worldBounds = new Bounds(transform.position, Vector3.one * 100f);
             for (int i = 0; i < segmentCount; i++)
             {
                 var segment = segments[i];
